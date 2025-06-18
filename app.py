@@ -63,7 +63,7 @@ def load_data_and_clients():
             languages = json.load(f)
     except FileNotFoundError:
         st.error("Error: `locations.json` or `languages.json` not found in `data/` directory.")
-        return None, None, None, None
+        return None, None, None, None, None, None
     
     locations_map = {loc['name']: loc['code'] for loc in locations}
     languages_map = {lang['name']: lang['code'] for lang in languages}
@@ -81,16 +81,17 @@ def load_data_and_clients():
 
 locations, languages, locations_map, languages_map, db_manager, client = load_data_and_clients()
 
-if not client.login or not client.password:
+if not client or not client.login or not client.password:
     st.error("DataForSEO credentials are not configured. Please add them to your `.streamlit/secrets.toml` file.")
     st.stop()
     
 # --- Main Application UI (Tabs) ---
-tab1, tab2, tab3, tab4 = st.tabs([
+tab1, tab2, tab3, tab4, tab5 = st.tabs([
     "📊 Data Fetcher", 
     "🧠 Local Clustering (Placeholder)", 
     "🔗 SERP Clustering", 
-    "📈 Data Analysis"
+    "📈 Data Analysis",
+    "🐞 Debug Cache"
 ])
 
 # == TAB 1: DATA FETCHER ==
@@ -131,49 +132,41 @@ with tab1:
             log_area = st.container()
             progress_bar = st.progress(0)
             
-            # Get corresponding codes for selected names
             location_code = locations_map[selected_location_name]
             language_code = languages_map[selected_language_name]
 
-            # --- FULLY IMPLEMENTED API LOGIC ---
             total_kws = len(keywords)
             
-            # Process Live APIs first (KD and Intent) as they are faster
             if fetch_kd:
                 log_area.info("Fetching Keyword Difficulty...")
                 cache_key = f"kd|{','.join(sorted(keywords))}|{location_code}|{language_code}"
-                cached_data = db_manager.check_cache(cache_key)
-                if cached_data:
-                    log_area.success("✅ Found Bulk KD data in cache.")
-                else:
+                if not db_manager.check_cache(cache_key):
                     response = client.fetch_bulk_keyword_difficulty(keywords, location_code, language_code)
                     if response and response.get('status_code') == 20000:
                         db_manager.update_cache(cache_key, response)
                         log_area.success("✅ Successfully fetched and cached Bulk KD.")
                     else:
                         log_area.error(f"❌ Failed to fetch Bulk KD. Response: {response}")
+                else:
+                    log_area.success("✅ Found Bulk KD data in cache.")
 
             if fetch_intent:
                 log_area.info("Fetching Search Intent...")
                 cache_key = f"intent|{','.join(sorted(keywords))}|{location_code}|{language_code}"
-                cached_data = db_manager.check_cache(cache_key)
-                if cached_data:
-                    log_area.success("✅ Found Bulk Intent data in cache.")
-                else:
+                if not db_manager.check_cache(cache_key):
                     response = client.fetch_search_intent(keywords, location_code, language_code)
                     if response and response.get('status_code') == 20000:
                         db_manager.update_cache(cache_key, response)
                         log_area.success("✅ Successfully fetched and cached Bulk Intent.")
                     else:
                         log_area.error(f"❌ Failed to fetch Bulk Intent. Response: {response}")
+                else:
+                    log_area.success("✅ Found Bulk Intent data in cache.")
 
-            # Process Asynchronous APIs (SERP and Volume)
-            # This requires checking each keyword individually
             for i, kw in enumerate(keywords):
                 progress_text = f"Processing keyword {i+1}/{total_kws}: {kw}"
                 progress_bar.progress((i + 1) / total_kws, text=progress_text)
 
-                # Fetch SERP Data
                 if fetch_serp:
                     cache_key = f"serp|{kw}|{location_code}|{language_code}|{selected_device}"
                     if db_manager.check_cache(cache_key):
@@ -181,15 +174,14 @@ with tab1:
                     else:
                         log_area.warning(f"❌ SERP Cache MISS for: '{kw}'. Posting task...")
                         post_response = client.post_serp_tasks([kw], selected_location_name, selected_language_name, selected_device)
-                        if post_response and post_response['tasks']:
+                        if post_response and post_response.get('tasks'):
                             task_id = post_response['tasks'][0]['id']
-                            log_area.info(f"   - Task posted. ID: {task_id}. Polling for results...")
-                            
+                            log_area.info(f"   - Task posted. ID: {task_id}. Polling...")
                             get_url = f"{API_BASE_URL}/v3/serp/google/organic/task_get/advanced/{task_id}"
-                            for _ in range(30): # Poll for 5 minutes max (30 * 10s)
+                            for _ in range(30): 
                                 time.sleep(10)
                                 task_result = client.get_task_results(get_url)
-                                if task_result and task_result.get('tasks') and task_result['tasks'][0].get('result'):
+                                if task_result and task_result.get('tasks') and task_result['tasks'][0].get('status_code') == 20000:
                                     db_manager.update_cache(cache_key, task_result)
                                     log_area.success(f"   - ✅ Got and cached SERP for '{kw}'")
                                     break
@@ -198,31 +190,28 @@ with tab1:
                         else:
                             log_area.error(f"   - ❌ Failed to post SERP task for '{kw}'")
                 
-                # Fetch Volume Data
                 if fetch_volume:
                     cache_key = f"volume|{kw}|{location_code}|{language_code}"
                     if db_manager.check_cache(cache_key):
                         log_area.info(f"✅ Volume Cache HIT for: '{kw}'")
                     else:
-                        # Note: Volume API is also async but task_post accepts multiple kws. 
-                        # For simplicity here, we post one by one to fit the loop.
-                        # A bulk implementation would be more efficient.
                         log_area.warning(f"❌ Volume Cache MISS for: '{kw}'. Posting task...")
                         post_response = client.post_search_volume_tasks([kw], selected_location_name, selected_language_name)
-                        if post_response and post_response['tasks']:
+                        if post_response and post_response.get('tasks'):
                             task_id = post_response['tasks'][0]['id']
                             log_area.info(f"   - Task posted. ID: {task_id}. Polling...")
                             get_url = f"{API_BASE_URL}/v3/keywords_data/google_ads/search_volume/task_get/{task_id}"
-                            time.sleep(5) # Give it a moment before first poll
-                            task_result = client.get_task_results(get_url)
-                            if task_result and task_result.get('tasks') and task_result['tasks'][0].get('result'):
-                                db_manager.update_cache(cache_key, task_result)
-                                log_area.success(f"   - ✅ Got and cached Volume for '{kw}'")
+                            for _ in range(10):
+                                time.sleep(5)
+                                task_result = client.get_task_results(get_url)
+                                if task_result and task_result.get('tasks') and task_result['tasks'][0].get('status_code') == 20000:
+                                    db_manager.update_cache(cache_key, task_result)
+                                    log_area.success(f"   - ✅ Got and cached Volume for '{kw}'")
+                                    break
                             else:
-                                log_area.error(f"   - ❌ Failed to get Volume for '{kw}'")
+                                log_area.error(f"   - ❌ Volume task timed out for '{kw}'")
                         else:
                             log_area.error(f"   - ❌ Failed to post Volume task for '{kw}'")
-
 
 # == TAB 2: LOCAL CLUSTERING (PLACEHOLDER) ==
 with tab2:
@@ -249,23 +238,20 @@ with tab3:
         if not keywords_to_cluster:
             st.warning("Please provide keywords to cluster.")
         else:
-            keyword_data_map = {} # Will hold all data: SERPs, volume, etc.
+            keyword_data_map = {}
             missing_keywords = []
             
             st.write("Verifying data in local cache...")
             with st.spinner("Checking cache for all required data..."):
-                # A more robust app would let the user select which cached data to use.
-                # We assume the same params as the default fetcher for now.
                 location_code = locations_map["United States"]
                 language_code = languages_map["English"]
                 
-                # --- FIX: Load bulk data caches ONCE outside the loop for efficiency ---
                 kd_key = f"kd|{','.join(sorted(keywords_to_cluster))}|{location_code}|{language_code}"
                 kd_cache = db_manager.check_cache(kd_key)
                 
                 for kw in keywords_to_cluster:
                     keyword_data_map[kw] = {}
-                    # 1. Fetch SERP
+                    
                     serp_key = f"serp|{kw}|{location_code}|{language_code}|desktop"
                     serp_data = db_manager.check_cache(serp_key)
                     if serp_data and 'tasks' in serp_data and serp_data['tasks'][0].get('result'):
@@ -275,22 +261,20 @@ with tab3:
                         missing_keywords.append(f"{kw} (SERP)")
                         continue
                     
-                    # 2. Fetch Volume
                     vol_key = f"volume|{kw}|{location_code}|{language_code}"
                     vol_data = db_manager.check_cache(vol_key)
                     if vol_data and 'tasks' in vol_data and vol_data['tasks'][0].get('result'):
-                        # The result for single-keyword volume is a list with one item
                         if vol_data['tasks'][0]['result']:
                             result = vol_data['tasks'][0]['result'][0]
                             keyword_data_map[kw]['volume'] = result.get('search_volume', 0)
                             keyword_data_map[kw]['cpc'] = result.get('cpc', 0)
 
-                    # 3. Get KD from the pre-loaded bulk cache
-                    if kd_cache and kd_cache['tasks'][0].get('result'):
-                        for item in kd_cache['tasks'][0]['result']:
-                            # The 'keyword' key IS present in the bulk KD result items
+                    if kd_cache and kd_cache.get('tasks') and kd_cache['tasks'][0].get('result'):
+                        result_items = kd_cache['tasks'][0]['result'][0].get('items', [])
+                        for item in result_items:
                             if item.get('keyword') == kw:
-                                keyword_data_map[kw]['kd'] = item.get('keyword_difficulty', 0)
+                                keyword_data_map[kw]['kd'] = item.get('keyword_difficulty')
+                                break
 
             if missing_keywords:
                 st.error("Data not found in cache for the following. Please fetch them in the 'Data Fetcher' tab first:")
@@ -321,7 +305,7 @@ with tab3:
                 if output_data:
                     df_detailed = pd.DataFrame(output_data)
                     st.session_state.clustered_data = df_detailed
-                    st.dataframe(df_detailed)
+                    st.dataframe(df_detailed, use_container_width=True)
                     st.success("Clustering complete! View/Export in the 'Data Analysis' tab.")
                 else:
                     st.warning("Could not form any clusters based on the current settings.")
@@ -335,12 +319,10 @@ with tab4:
         df_detailed = st.session_state.clustered_data
         
         st.subheader("Detailed Cluster Data")
-        # Using st.data_editor makes the dataframe filterable by the user
         filtered_df = st.data_editor(df_detailed, use_container_width=True, num_rows="dynamic")
         
         st.subheader("Cluster Summary")
         if not filtered_df.empty:
-            # Ensure numeric columns are treated as such, coercing errors
             numeric_cols = ['Volume', 'CPC', 'KD']
             for col in numeric_cols:
                 filtered_df[col] = pd.to_numeric(filtered_df[col], errors='coerce')
@@ -352,7 +334,6 @@ with tab4:
                 Average_KD=('KD', 'mean')
             ).reset_index()
             
-            # Format the summary table for better readability
             df_summary['Total_Volume'] = df_summary['Total_Volume'].astype(int)
             df_summary['Average_CPC'] = df_summary['Average_CPC'].round(2)
             df_summary['Average_KD'] = df_summary['Average_KD'].round(1)
@@ -368,3 +349,30 @@ with tab4:
                mime="application/vnd.ms-excel"
             )
 
+# == TAB 5: DEBUG CACHE ==
+with tab5:
+    st.header("Inspect Raw Cache Data")
+    st.info("Use this tab to look up the raw JSON data stored in the local SQLite database for a specific cache key.")
+    
+    # You can construct cache keys based on the logic in Tab 1 and Tab 3
+    st.markdown("""
+    **Example Cache Keys:**
+    - **SERP:** `serp|keyword|location_code|language_code|device`
+    - **Volume:** `volume|keyword|location_code|language_code`
+    - **Bulk KD:** `kd|kw1,kw2,kw3|location_code|language_code`
+    - **Bulk Intent:** `intent|kw1,kw2,kw3|location_code|language_code`
+    """)
+
+    cache_key_input = st.text_input("Enter exact cache key to inspect:")
+    
+    if st.button("🔍 Check Cache", key="debug_check"):
+        if cache_key_input:
+            with st.spinner("Searching cache..."):
+                cached_data = db_manager.check_cache(cache_key_input)
+                if cached_data:
+                    st.success("Data found in cache!")
+                    st.json(cached_data)
+                else:
+                    st.warning("No data found for this key.")
+        else:
+            st.warning("Please enter a cache key.")
