@@ -259,6 +259,10 @@ with tab3:
                 location_code = locations_map["United States"]
                 language_code = languages_map["English"]
                 
+                # --- FIX: Load bulk data caches ONCE outside the loop for efficiency ---
+                kd_key = f"kd|{','.join(sorted(keywords_to_cluster))}|{location_code}|{language_code}"
+                kd_cache = db_manager.check_cache(kd_key)
+                
                 for kw in keywords_to_cluster:
                     keyword_data_map[kw] = {}
                     # 1. Fetch SERP
@@ -269,23 +273,23 @@ with tab3:
                         keyword_data_map[kw]['urls'] = [item['url'] for item in serp_items if 'url' in item]
                     else:
                         missing_keywords.append(f"{kw} (SERP)")
-                        continue # Can't cluster without SERP data
+                        continue
                     
                     # 2. Fetch Volume
                     vol_key = f"volume|{kw}|{location_code}|{language_code}"
                     vol_data = db_manager.check_cache(vol_key)
                     if vol_data and 'tasks' in vol_data and vol_data['tasks'][0].get('result'):
-                        result = vol_data['tasks'][0]['result'][0]
-                        keyword_data_map[kw]['volume'] = result.get('search_volume', 0)
-                        keyword_data_map[kw]['cpc'] = result.get('cpc', 0)
-                    
-                    # 3. Fetch KD and Intent (from bulk cache)
-                    # This is less efficient, would be better to load bulk cache once outside loop
-                    kd_key = f"kd|{','.join(sorted(keywords_to_cluster))}|{location_code}|{language_code}"
-                    kd_cache = db_manager.check_cache(kd_key)
+                        # The result for single-keyword volume is a list with one item
+                        if vol_data['tasks'][0]['result']:
+                            result = vol_data['tasks'][0]['result'][0]
+                            keyword_data_map[kw]['volume'] = result.get('search_volume', 0)
+                            keyword_data_map[kw]['cpc'] = result.get('cpc', 0)
+
+                    # 3. Get KD from the pre-loaded bulk cache
                     if kd_cache and kd_cache['tasks'][0].get('result'):
                         for item in kd_cache['tasks'][0]['result']:
-                            if item['keyword'] == kw:
+                            # The 'keyword' key IS present in the bulk KD result items
+                            if item.get('keyword') == kw:
                                 keyword_data_map[kw]['kd'] = item.get('keyword_difficulty', 0)
 
             if missing_keywords:
@@ -293,26 +297,26 @@ with tab3:
                 st.json(list(set(missing_keywords)))
             else:
                 st.success("All keywords have cached SERP data. Running clustering...")
-                # Prepare data specifically for the clustering function
                 keyword_serp_data_for_clustering = {kw: data['urls'] for kw, data in keyword_data_map.items() if 'urls' in data}
                 
                 clusters = perform_serp_clustering(keyword_serp_data_for_clustering, min_intersections, urls_to_check)
                 st.info(f"Generated {len(clusters)} clusters.")
                 
                 output_data = []
-                for cluster in clusters:
-                    # Find main keyword (highest volume)
-                    main_keyword = max(cluster, key=lambda k: keyword_data_map.get(k, {}).get('volume', 0))
-                    
-                    for keyword in cluster:
-                        data = keyword_data_map.get(keyword, {})
-                        output_data.append({
-                            "Cluster Main Keyword": main_keyword,
-                            "Keyword": keyword,
-                            "Volume": data.get('volume', 'N/A'),
-                            "CPC": data.get('cpc', 'N/A'),
-                            "KD": data.get('kd', 'N/A')
-                        })
+                if clusters:
+                    for cluster in clusters:
+                        if not cluster: continue
+                        main_keyword = max(cluster, key=lambda k: keyword_data_map.get(k, {}).get('volume', 0))
+                        
+                        for keyword in cluster:
+                            data = keyword_data_map.get(keyword, {})
+                            output_data.append({
+                                "Cluster Main Keyword": main_keyword,
+                                "Keyword": keyword,
+                                "Volume": data.get('volume', 'N/A'),
+                                "CPC": data.get('cpc', 'N/A'),
+                                "KD": data.get('kd', 'N/A')
+                            })
                 
                 if output_data:
                     df_detailed = pd.DataFrame(output_data)
