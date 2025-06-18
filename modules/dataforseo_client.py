@@ -42,12 +42,10 @@ class DataForSeoClient:
                 headers=self.headers,
                 data=json.dumps(payload)
             )
-            # Raise an exception for bad status codes (4xx or 5xx)
             response.raise_for_status()
             return response.json()
         except requests.exceptions.RequestException as e:
             print(f"An error occurred during API request to {url}: {e}")
-            # In a real app, you might want to log this or show a more user-friendly error.
             return None
         except json.JSONDecodeError:
             print(f"Failed to decode JSON response from {url}")
@@ -70,18 +68,7 @@ class DataForSeoClient:
             return None
 
     def post_serp_tasks(self, keywords, location_name, language_name, device):
-        """
-        Posts tasks to the SERP API.
-
-        Args:
-            keywords (list): A list of keyword strings.
-            location_name (str): User-friendly location name (e.g., "United States").
-            language_name (str): User-friendly language name (e.g., "English").
-            device (str): "desktop" or "mobile".
-
-        Returns:
-            dict: The API response from the task_post endpoint.
-        """
+        """Posts tasks to the SERP API."""
         url = f"{self.api_base_url}/v3/serp/google/organic/task_post"
         post_data = []
         for kw in keywords:
@@ -90,44 +77,43 @@ class DataForSeoClient:
                 "language_name": language_name,
                 "keyword": kw,
                 "device": device,
-                "depth": 100 # Fetch top 100 results
+                "depth": 100
             }
             post_data.append(task)
         
         return self._post_request(url, post_data)
 
     def post_search_volume_tasks(self, keywords, location_name, language_name):
-        """
-        Posts tasks to the search volume API.
-        """
+        """Posts tasks to the search volume API."""
         url = f"{self.api_base_url}/v3/keywords_data/google_ads/search_volume/task_post"
-        post_data = {
+        # The API expects a list containing one object for this endpoint
+        post_data = [{
             "keywords": keywords,
             "location_name": location_name,
             "language_name": language_name,
-        }
-        # Note: This endpoint expects a slightly different payload structure (a single object)
-        return self._post_request(url, [post_data])
+        }]
+        return self._post_request(url, post_data)
 
-    def fetch_bulk_keyword_difficulty(self, keywords):
-        """
-        Fetches Keyword Difficulty for a list of keywords using the live endpoint.
-        """
+    def fetch_bulk_keyword_difficulty(self, keywords, location_code, language_code):
+        """Fetches Keyword Difficulty for a list of keywords using the live endpoint."""
         url = f"{self.api_base_url}/v3/dataforseo_labs/google/bulk_keyword_difficulty/live"
-        payload = [{"keywords": keywords}]
+        payload = [{
+            "keywords": keywords,
+            "location_code": location_code,
+            "language_code": language_code
+        }]
         return self._post_request(url, payload)
 
-    def fetch_search_intent(self, keywords):
-        """
-        Fetches Search Intent for a list of keywords using the live endpoint.
-        """
+    def fetch_search_intent(self, keywords, location_code, language_code):
+        """Fetches Search Intent for a list of keywords using the live endpoint."""
         url = f"{self.api_base_url}/v3/dataforseo_labs/google/search_intent/live"
-        payload = [{"keywords": keywords}]
+        payload = [{
+            "keywords": keywords,
+            "location_code": location_code,
+            "language_code": language_code
+        }]
         return self._post_request(url, payload)
     
     def get_task_results(self, url):
-        """
-        Retrieves the results of a previously posted asynchronous task.
-        """
+        """Retrieves the results of a previously posted asynchronous task."""
         return self._get_request(url)
-
