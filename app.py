@@ -38,19 +38,13 @@ def get_keywords_from_input(text_input, file_input):
             return []
     return list(set(kw.lower() for kw in keywords))
 
-def df_to_excel(df_detailed, df_summary):
-    """Converts two DataFrames to a multi-sheet Excel file in memory."""
-    output = io.BytesIO()
-    with pd.ExcelWriter(output, engine='openpyxl') as writer:
-        df_detailed.to_excel(writer, sheet_name='Clustered Keywords', index=False)
-        df_summary.to_excel(writer, sheet_name='Cluster Summary', index=False)
-    processed_data = output.getvalue()
-    return processed_data
+def df_to_csv(df):
+    """Converts a DataFrame to a CSV in memory."""
+    return df.to_csv(index=False).encode('utf-8')
 
 # --- Initialization & Session State ---
-if 'clustered_data' not in st.session_state:
-    st.session_state.clustered_data = None
-    st.session_state.summary_data = None
+if 'clustered_data_for_analysis' not in st.session_state:
+    st.session_state.clustered_data_for_analysis = None
 if 'confirm_delete' not in st.session_state:
     st.session_state.confirm_delete = False
 
@@ -156,7 +150,6 @@ with tab1:
                 progress_text = f"Processing keyword {i+1}/{len(keywords)}: {kw}"
                 progress_bar.progress((i + 1) / len(keywords), text=progress_text)
                 
-                # --- Fetch SERP Data (Async) ---
                 if fetch_serp:
                     cache_key = f"serp|{kw}|{location_code}|{language_code}|{selected_device}"
                     if db_manager.check_cache(cache_key, max_age_days=cache_duration_days) is None:
@@ -164,7 +157,6 @@ with tab1:
                         post_response = client.post_serp_tasks(kw, location_code, language_code, selected_device)
                         if post_response and post_response.get('tasks'):
                             task_id = post_response['tasks'][0]['id']
-                            log_area.info(f"   - Task posted. ID: {task_id}. Polling...")
                             get_url = f"{API_BASE_URL}/v3/serp/google/organic/task_get/advanced/{task_id}"
                             for _ in range(30): 
                                 time.sleep(10)
@@ -180,7 +172,6 @@ with tab1:
                     else:
                         log_area.info(f"✅ SERP Cache HIT for: '{kw}'")
 
-                # --- Fetch Volume Data (Async) ---
                 if fetch_volume:
                     cache_key = f"volume|{kw}|{location_code}|{language_code}"
                     if db_manager.check_cache(cache_key, max_age_days=cache_duration_days) is None:
@@ -188,7 +179,6 @@ with tab1:
                         post_response = client.post_search_volume_tasks(kw, location_code, language_code)
                         if post_response and post_response.get('tasks'):
                             task_id = post_response['tasks'][0]['id']
-                            log_area.info(f"   - Task posted. ID: {task_id}. Polling...")
                             get_url = f"{API_BASE_URL}/v3/keywords_data/google_ads/search_volume/task_get/{task_id}"
                             for _ in range(10): 
                                 time.sleep(5)
@@ -204,7 +194,6 @@ with tab1:
                     else:
                         log_area.info(f"✅ Volume Cache HIT for: '{kw}'")
 
-                # --- Fetch Keyword Difficulty (Live) ---
                 if fetch_kd:
                     cache_key = f"kd|{kw}|{location_code}|{language_code}"
                     if db_manager.check_cache(cache_key, max_age_days=cache_duration_days) is None:
@@ -218,7 +207,6 @@ with tab1:
                     else:
                         log_area.info(f"✅ KD Cache HIT for: '{kw}'")
 
-                # --- Fetch Search Intent (Live) ---
                 if fetch_intent:
                     cache_key = f"intent|{kw}|{location_code}|{language_code}"
                     if db_manager.check_cache(cache_key, max_age_days=cache_duration_days) is None:
@@ -269,36 +257,30 @@ with tab3:
                 
                 for kw in keywords_to_cluster:
                     keyword_data_map[kw] = {}
-                    
-                    # 1. Fetch SERP data
                     serp_key = f"serp|{kw}|{location_code}|{language_code}|{device}"
                     serp_data = db_manager.check_cache(serp_key)
                     if serp_data and serp_data.get('tasks') and serp_data['tasks'][0].get('result'):
                         serp_items = serp_data['tasks'][0]['result'][0].get('items', [])
-                        # Get URLs, but only up to the urls_to_check limit
                         keyword_data_map[kw]['urls'] = [item['url'] for item in serp_items if 'url' in item][:urls_to_check]
                     else:
                         missing_keywords.append(f"{kw} (SERP)")
                         continue
                     
-                    # 2. Fetch Volume data
                     vol_key = f"volume|{kw}|{location_code}|{language_code}"
                     vol_data = db_manager.check_cache(vol_key)
                     if vol_data and vol_data.get('tasks') and vol_data['tasks'][0].get('result'):
                         if vol_data['tasks'][0]['result']:
                             result = vol_data['tasks'][0]['result'][0]
-                            keyword_data_map[kw]['volume'] = result.get('search_volume', 'N/A')
-                            keyword_data_map[kw]['cpc'] = result.get('cpc', 'N/A')
+                            keyword_data_map[kw]['volume'] = result.get('search_volume')
+                            keyword_data_map[kw]['cpc'] = result.get('cpc')
                     
-                    # 3. Fetch KD data
                     kd_key = f"kd|{kw}|{location_code}|{language_code}"
                     kd_data = db_manager.check_cache(kd_key)
                     if kd_data and kd_data.get('tasks') and kd_data['tasks'][0].get('result'):
                         result_items = kd_data['tasks'][0]['result'][0].get('items', [])
                         if result_items:
-                            keyword_data_map[kw]['kd'] = result_items[0].get('keyword_difficulty', 'N/A')
+                            keyword_data_map[kw]['kd'] = result_items[0].get('keyword_difficulty')
                     
-                    # 4. Fetch Intent data
                     intent_key = f"intent|{kw}|{location_code}|{language_code}"
                     intent_data = db_manager.check_cache(intent_key)
                     if intent_data and intent_data.get('tasks') and intent_data['tasks'][0].get('result'):
@@ -306,7 +288,7 @@ with tab3:
                         if result_items:
                              first_result_item = result_items[0]
                              if first_result_item.get('keyword_intent'):
-                                 keyword_data_map[kw]['intent'] = first_result_item['keyword_intent'].get('label', 'N/A')
+                                 keyword_data_map[kw]['intent'] = first_result_item['keyword_intent'].get('label')
 
             if missing_keywords:
                 st.error("Data not found in cache for the following. Please fetch them in the 'Data Fetcher' tab first:")
@@ -322,81 +304,93 @@ with tab3:
                 if clusters:
                     for cluster in clusters:
                         if not cluster: continue
-                        main_keyword = max(cluster, key=lambda k: keyword_data_map.get(k, {}).get('volume', 0) or 0)
-                        main_keyword_urls = set(keyword_data_map[main_keyword].get('urls', []))
-                        
+                        main_keyword = sorted(
+                            cluster, 
+                            key=lambda k: (
+                                keyword_data_map.get(k, {}).get('volume', 0) or 0, 
+                                -1 * (keyword_data_map.get(k, {}).get('kd', 101) or 101)
+                            ),
+                            reverse=True
+                        )[0]
+                        main_keyword_urls = set(keyword_data_map.get(main_keyword, {}).get('urls', []))
+
                         for keyword in cluster:
                             data = keyword_data_map.get(keyword, {})
-                            
-                            # --- CALCULATE INTERSECTION COUNT ---
                             current_keyword_urls = set(data.get('urls', []))
                             intersections = len(main_keyword_urls.intersection(current_keyword_urls))
 
                             output_data.append({
                                 "Cluster Main Keyword": main_keyword,
                                 "Keyword": keyword,
-                                "Intersections": intersections, # The new column
-                                "Volume": data.get('volume', 'N/A'),
-                                "CPC": data.get('cpc', 'N/A'),
-                                "KD": data.get('kd', 'N/A'),
+                                "Intersections": intersections,
+                                "Volume": data.get('volume', 0),
+                                "CPC": data.get('cpc', 0),
+                                "KD": data.get('kd', 101),
                                 "Search Intent": data.get('intent', 'N/A')
                             })
                 
                 if output_data:
                     df_detailed = pd.DataFrame(output_data)
-                    # Reorder columns to place Intersections next to Keyword
                     cols_order = ["Cluster Main Keyword", "Keyword", "Intersections", "Volume", "CPC", "KD", "Search Intent"]
                     df_detailed = df_detailed[cols_order]
-
-                    st.session_state.clustered_data = df_detailed
+                    # --- RESTORED: Show table in Tab 3 ---
                     st.dataframe(df_detailed, use_container_width=True)
-                    st.success("Clustering complete! View/Export in the 'Data Analysis' tab.")
+                    # --- Pass the final, enriched DataFrame to Tab 4 ---
+                    st.session_state.clustered_data_for_analysis = df_detailed 
+                    st.success("Clustering complete! View and analyze the results in the 'Data Analysis' tab.")
                 else:
                     st.warning("Could not form any clusters based on the current settings.")
 
 # == TAB 4: DATA ANALYSIS ==
 with tab4:
     st.header("Analyze and Export Clusters")
-    if st.session_state.clustered_data is None:
+    if 'clustered_data_for_analysis' not in st.session_state or st.session_state.clustered_data_for_analysis is None:
         st.info("Run clustering in the 'SERP Clustering' tab to see results here.")
     else:
-        df_detailed = st.session_state.clustered_data
-        
-        st.subheader("Detailed Cluster Data")
-        filtered_df = st.data_editor(df_detailed, use_container_width=True, num_rows="dynamic")
-        
-        st.subheader("Cluster Summary")
-        if not filtered_df.empty:
-            numeric_cols = ['Volume', 'CPC', 'KD']
-            for col in numeric_cols:
-                filtered_df[col] = pd.to_numeric(filtered_df[col], errors='coerce')
-            
-            # --- AGGREGATION LOGIC ---
-            summary_agg = {
-                'Keywords_in_Cluster': ('Keyword', lambda x: ', '.join(x)),
-                'Total_Volume': ('Volume', 'sum'),
-                'Average_CPC': ('CPC', 'mean'),
-                'Average_KD': ('KD', 'mean'),
-            }
-            if 'Search Intent' in filtered_df.columns:
-                 summary_agg['Primary_Intent'] = ('Search Intent', lambda x: x.mode()[0] if not x.mode().empty else 'N/A')
+        df_analysis = st.session_state.clustered_data_for_analysis.copy()
 
-            df_summary = filtered_df.groupby('Cluster Main Keyword').agg(**summary_agg).reset_index()
-            
-            df_summary['Total_Volume'] = df_summary['Total_Volume'].astype(int)
-            df_summary['Average_CPC'] = df_summary['Average_CPC'].round(2)
-            df_summary['Average_KD'] = df_summary['Average_KD'].round(1)
-            
-            st.dataframe(df_summary, use_container_width=True)
-            st.session_state.summary_data = df_summary
+        # --- CREATE NEW DISPLAY DATAFRAME ---
+        display_rows = []
+        # Group by the final main keyword
+        for main_kw, group in df_analysis.groupby('Cluster Main Keyword'):
+            # First row for this group will show the main keyword in the 'Cluster' column
+            is_first_row = True
+            for index, row in group.iterrows():
+                if is_first_row:
+                    display_rows.append({
+                        "Cluster": main_kw,
+                        "Keyword": row["Keyword"],
+                        "Intersections": row["Intersections"],
+                        "Volume": row["Volume"],
+                        "CPC": row["CPC"],
+                        "KD": row["KD"],
+                        "Search Intent": row["Search Intent"]
+                    })
+                    is_first_row = False
+                else:
+                    display_rows.append({
+                        "Cluster": "", # Blank for subsequent rows in the same cluster
+                        "Keyword": row["Keyword"],
+                        "Intersections": row["Intersections"],
+                        "Volume": row["Volume"],
+                        "CPC": row["CPC"],
+                        "KD": row["KD"],
+                        "Search Intent": row["Search Intent"]
+                    })
 
-        if st.session_state.get('summary_data') is not None:
+        if display_rows:
+            df_display = pd.DataFrame(display_rows)
+            st.dataframe(df_display, use_container_width=True)
+            
             st.download_button(
-               label="📥 Export to Excel",
-               data=df_to_excel(filtered_df, st.session_state.summary_data),
-               file_name=f"seo_clusters_{time.strftime('%Y%m%d')}.xlsx",
-               mime="application/vnd.ms-excel"
+               label="📥 Export to CSV",
+               data=df_to_csv(df_display),
+               file_name=f"seo_cluster_analysis_{time.strftime('%Y%m%d')}.csv",
+               mime="text/csv"
             )
+        else:
+            st.warning("No data to display.")
+
 
 # == TAB 5: DEBUG & CACHE ==
 with tab5:
