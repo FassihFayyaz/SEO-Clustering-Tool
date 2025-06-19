@@ -333,9 +333,7 @@ with tab3:
                     df_detailed = pd.DataFrame(output_data)
                     cols_order = ["Cluster Main Keyword", "Keyword", "Intersections", "Volume", "CPC", "KD", "Search Intent"]
                     df_detailed = df_detailed[cols_order]
-                    # --- RESTORED: Show table in Tab 3 ---
                     st.dataframe(df_detailed, use_container_width=True)
-                    # --- Pass the final, enriched DataFrame to Tab 4 ---
                     st.session_state.clustered_data_for_analysis = df_detailed 
                     st.success("Clustering complete! View and analyze the results in the 'Data Analysis' tab.")
                 else:
@@ -349,48 +347,71 @@ with tab4:
     else:
         df_analysis = st.session_state.clustered_data_for_analysis.copy()
 
-        # --- CREATE NEW DISPLAY DATAFRAME ---
-        display_rows = []
-        # Group by the final main keyword
-        for main_kw, group in df_analysis.groupby('Cluster Main Keyword'):
-            # First row for this group will show the main keyword in the 'Cluster' column
-            is_first_row = True
-            for index, row in group.iterrows():
-                if is_first_row:
-                    display_rows.append({
-                        "Cluster": main_kw,
-                        "Keyword": row["Keyword"],
-                        "Intersections": row["Intersections"],
-                        "Volume": row["Volume"],
-                        "CPC": row["CPC"],
-                        "KD": row["KD"],
-                        "Search Intent": row["Search Intent"]
-                    })
-                    is_first_row = False
-                else:
-                    display_rows.append({
-                        "Cluster": "", # Blank for subsequent rows in the same cluster
-                        "Keyword": row["Keyword"],
-                        "Intersections": row["Intersections"],
-                        "Volume": row["Volume"],
-                        "CPC": row["CPC"],
-                        "KD": row["KD"],
-                        "Search Intent": row["Search Intent"]
-                    })
+        numeric_cols = ['Volume', 'CPC', 'KD', 'Intersections']
+        for col in numeric_cols:
+            df_analysis[col] = pd.to_numeric(df_analysis[col], errors='coerce')
 
-        if display_rows:
-            df_display = pd.DataFrame(display_rows)
-            st.dataframe(df_display, use_container_width=True)
+        summary_agg = {
+            'Total_Volume': ('Volume', 'sum'),
+            'Average_CPC': ('CPC', 'mean'),
+            'Average_KD': ('KD', 'mean'),
+            'Average_Intersections': ('Intersections', 'mean'),
+            'Primary_Intent': ('Search Intent', lambda x: x.mode()[0] if not x.mode().empty else 'N/A')
+        }
+        df_summary = df_analysis.groupby('Cluster Main Keyword').agg(**summary_agg).reset_index()
+
+        # --- HIERARCHICAL TABLE CREATION ---
+        hierarchical_rows = []
+        main_keywords_list = df_summary['Cluster Main Keyword'].tolist()
+        
+        for index, summary_row in df_summary.iterrows():
+            main_kw = summary_row['Cluster Main Keyword']
+            
+            # 1. Add the Summary Row
+            hierarchical_rows.append({
+                "Cluster": main_kw,
+                "Keyword": main_kw,
+                "Intersections": f"{summary_row['Average_Intersections']:.1f}",
+                "Volume": f"{int(summary_row['Total_Volume']):,}",
+                "CPC": f"${summary_row['Average_CPC']:.2f}",
+                "KD": f"{summary_row['Average_KD']:.1f}",
+                "Search Intent": summary_row['Primary_Intent'].capitalize()
+            })
+
+            # 2. Add the Detail Rows
+            cluster_details = df_analysis[df_analysis['Cluster Main Keyword'] == main_kw]
+            for _, detail_row in cluster_details.iterrows():
+                hierarchical_rows.append({
+                    "Cluster": "", # Blank for detail rows
+                    "Keyword": detail_row['Keyword'],
+                    "Intersections": detail_row['Intersections'],
+                    "Volume": detail_row['Volume'],
+                    "CPC": detail_row['CPC'],
+                    "KD": detail_row['KD'],
+                    "Search Intent": detail_row['Search Intent']
+                })
+
+        if hierarchical_rows:
+            df_hierarchical = pd.DataFrame(hierarchical_rows)
+            
+            # --- Styling Function to make the summary row bold ---
+            def style_main_keyword(row, main_kws):
+                is_main_summary_row = row.Keyword in main_kws and row.Cluster != ""
+                style = 'font-weight: bold; font-size: 1.1em; background-color: #262730;'
+                return [style if is_main_summary_row else '' for col in row]
+
+            styler = df_hierarchical.style.apply(style_main_keyword, main_kws=main_keywords_list, axis=1)
+            
+            st.dataframe(styler, use_container_width=True)
             
             st.download_button(
                label="📥 Export to CSV",
-               data=df_to_csv(df_display),
+               data=df_to_csv(df_hierarchical),
                file_name=f"seo_cluster_analysis_{time.strftime('%Y%m%d')}.csv",
                mime="text/csv"
             )
         else:
             st.warning("No data to display.")
-
 
 # == TAB 5: DEBUG & CACHE ==
 with tab5:
