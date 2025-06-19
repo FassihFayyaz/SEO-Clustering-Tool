@@ -275,7 +275,8 @@ with tab3:
                     serp_data = db_manager.check_cache(serp_key)
                     if serp_data and serp_data.get('tasks') and serp_data['tasks'][0].get('result'):
                         serp_items = serp_data['tasks'][0]['result'][0].get('items', [])
-                        keyword_data_map[kw]['urls'] = [item['url'] for item in serp_items if 'url' in item]
+                        # Get URLs, but only up to the urls_to_check limit
+                        keyword_data_map[kw]['urls'] = [item['url'] for item in serp_items if 'url' in item][:urls_to_check]
                     else:
                         missing_keywords.append(f"{kw} (SERP)")
                         continue
@@ -297,13 +298,11 @@ with tab3:
                         if result_items:
                             keyword_data_map[kw]['kd'] = result_items[0].get('keyword_difficulty', 'N/A')
                     
-                    # --- FINAL CORRECTED INTENT PARSING LOGIC ---
+                    # 4. Fetch Intent data
                     intent_key = f"intent|{kw}|{location_code}|{language_code}"
                     intent_data = db_manager.check_cache(intent_key)
                     if intent_data and intent_data.get('tasks') and intent_data['tasks'][0].get('result'):
                         result_items = intent_data['tasks'][0]['result'][0].get('items', [])
-                        # Since we request one keyword, the first item in the result list is what we need.
-                        # This works around the sandbox returning incorrect keyword names in its list.
                         if result_items:
                              first_result_item = result_items[0]
                              if first_result_item.get('keyword_intent'):
@@ -323,14 +322,20 @@ with tab3:
                 if clusters:
                     for cluster in clusters:
                         if not cluster: continue
-                        # Use a fallback of 0 for volume if it's 'N/A' or missing
                         main_keyword = max(cluster, key=lambda k: keyword_data_map.get(k, {}).get('volume', 0) or 0)
+                        main_keyword_urls = set(keyword_data_map[main_keyword].get('urls', []))
                         
                         for keyword in cluster:
                             data = keyword_data_map.get(keyword, {})
+                            
+                            # --- CALCULATE INTERSECTION COUNT ---
+                            current_keyword_urls = set(data.get('urls', []))
+                            intersections = len(main_keyword_urls.intersection(current_keyword_urls))
+
                             output_data.append({
                                 "Cluster Main Keyword": main_keyword,
                                 "Keyword": keyword,
+                                "Intersections": intersections, # The new column
                                 "Volume": data.get('volume', 'N/A'),
                                 "CPC": data.get('cpc', 'N/A'),
                                 "KD": data.get('kd', 'N/A'),
@@ -339,6 +344,10 @@ with tab3:
                 
                 if output_data:
                     df_detailed = pd.DataFrame(output_data)
+                    # Reorder columns to place Intersections next to Keyword
+                    cols_order = ["Cluster Main Keyword", "Keyword", "Intersections", "Volume", "CPC", "KD", "Search Intent"]
+                    df_detailed = df_detailed[cols_order]
+
                     st.session_state.clustered_data = df_detailed
                     st.dataframe(df_detailed, use_container_width=True)
                     st.success("Clustering complete! View/Export in the 'Data Analysis' tab.")
@@ -363,14 +372,12 @@ with tab4:
                 filtered_df[col] = pd.to_numeric(filtered_df[col], errors='coerce')
             
             # --- AGGREGATION LOGIC ---
-            # Group by main keyword to calculate stats
             summary_agg = {
                 'Keywords_in_Cluster': ('Keyword', lambda x: ', '.join(x)),
                 'Total_Volume': ('Volume', 'sum'),
                 'Average_CPC': ('CPC', 'mean'),
                 'Average_KD': ('KD', 'mean'),
             }
-            # Special handling for intent - find the most common one (mode)
             if 'Search Intent' in filtered_df.columns:
                  summary_agg['Primary_Intent'] = ('Search Intent', lambda x: x.mode()[0] if not x.mode().empty else 'N/A')
 
