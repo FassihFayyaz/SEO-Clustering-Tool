@@ -3,6 +3,7 @@
 import requests
 import json
 import time
+import base64
 
 class DataForSeoClient:
     """
@@ -13,32 +14,26 @@ class DataForSeoClient:
     def __init__(self, login, password, api_base_url):
         """
         Initializes the client with user credentials and the API base URL.
-
-        Args:
-            login (str): The API login email from DataForSEO.
-            password (str): The API password from DataForSEO.
-            api_base_url (str): The base URL for the API (sandbox or live).
+        It prepares the authentication header exactly as specified.
         """
+        self.api_base_url = api_base_url
         self.login = login
         self.password = password
-        self.api_base_url = api_base_url
-        self.headers = {'Content-Type': 'application/json'}
+        
+        # Manually prepare the Basic Authentication header to exactly match the working script.
+        cred = base64.b64encode(f"{login}:{password}".encode()).decode()
+        self.headers = {
+            'Authorization': f'Basic {cred}',
+            'Content-Type': 'application/json'
+        }
 
     def _post_request(self, url, payload):
         """
         A private helper method for sending POST requests to the API.
-
-        Args:
-            url (str): The full API endpoint URL.
-            payload (list): The data payload to be sent, typically a list of tasks.
-
-        Returns:
-            dict: The JSON response from the API, or None if an error occurs.
         """
         try:
             response = requests.post(
                 url,
-                auth=(self.login, self.password),
                 headers=self.headers,
                 data=json.dumps(payload)
             )
@@ -58,7 +53,6 @@ class DataForSeoClient:
         try:
             response = requests.get(
                 url,
-                auth=(self.login, self.password),
                 headers=self.headers
             )
             response.raise_for_status()
@@ -67,48 +61,44 @@ class DataForSeoClient:
             print(f"An error occurred during API GET request to {url}: {e}")
             return None
 
-    def post_serp_tasks(self, keywords, location_name, language_name, device):
-        """Posts tasks to the SERP API."""
+    def post_serp_tasks(self, keyword, location_code, language_code, device):
+        """Posts a SERP task for a single keyword."""
         url = f"{self.api_base_url}/v3/serp/google/organic/task_post"
-        post_data = []
-        for kw in keywords:
-            task = {
-                "location_name": location_name,
-                "language_name": language_name,
-                "keyword": kw,
-                "device": device,
-                "depth": 100
-            }
-            post_data.append(task)
-        
-        return self._post_request(url, post_data)
-
-    def post_search_volume_tasks(self, keywords, location_name, language_name):
-        """Posts tasks to the search volume API."""
-        url = f"{self.api_base_url}/v3/keywords_data/google_ads/search_volume/task_post"
-        # The API expects a list containing one object for this endpoint
         post_data = [{
-            "keywords": keywords,
-            "location_name": location_name,
-            "language_name": language_name,
+            "location_code": location_code,
+            "language_code": language_code,
+            "keyword": keyword,
+            "device": device,
+            "depth": 100
         }]
         return self._post_request(url, post_data)
 
-    def fetch_bulk_keyword_difficulty(self, keywords, location_code, language_code):
-        """Fetches Keyword Difficulty for a list of keywords using the live endpoint."""
+    def post_search_volume_tasks(self, keyword, location_code, language_code):
+        """Posts a search volume task for a single keyword."""
+        url = f"{self.api_base_url}/v3/keywords_data/google_ads/search_volume/task_post"
+        post_data = [{
+            "keywords": [keyword],
+            "location_code": location_code,
+            "language_code": language_code,
+        }]
+        return self._post_request(url, post_data)
+
+    def fetch_keyword_difficulty(self, keyword, location_code, language_code):
+        """Fetches Keyword Difficulty for a single keyword."""
+        # Note: This still uses the 'bulk' endpoint name, but we only send one keyword.
         url = f"{self.api_base_url}/v3/dataforseo_labs/google/bulk_keyword_difficulty/live"
         payload = [{
-            "keywords": keywords,
+            "keywords": [keyword],
             "location_code": location_code,
             "language_code": language_code
         }]
         return self._post_request(url, payload)
 
-    def fetch_search_intent(self, keywords, location_code, language_code):
-        """Fetches Search Intent for a list of keywords using the live endpoint."""
+    def fetch_search_intent(self, keyword, location_code, language_code):
+        """Fetches Search Intent for a single keyword."""
         url = f"{self.api_base_url}/v3/dataforseo_labs/google/search_intent/live"
         payload = [{
-            "keywords": keywords,
+            "keywords": [keyword],
             "location_code": location_code,
             "language_code": language_code
         }]

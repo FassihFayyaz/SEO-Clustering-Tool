@@ -57,7 +57,6 @@ if 'confirm_delete' not in st.session_state:
 # --- Load Static Data & Initialize Clients ---
 @st.cache_resource
 def load_data_and_clients():
-    """Loads static JSON data and initializes API clients."""
     try:
         with open('data/locations.json', 'r') as f:
             locations = json.load(f)
@@ -114,8 +113,8 @@ with tab1:
     location_options = [loc['name'] for loc in locations]
     language_options = [lang['name'] for lang in languages]
     
-    selected_location_name = c1.selectbox("Select Location:", location_options, index=0) # Default to US
-    selected_language_name = c2.selectbox("Select Language:", language_options, index=0) # Default to English
+    selected_location_name = c1.selectbox("Select Location:", location_options, index=0)
+    selected_language_name = c2.selectbox("Select Language:", language_options, index=0)
     selected_device = c3.selectbox("Select Device (for SERP):", ["desktop", "mobile"])
 
     st.subheader("Cache Settings")
@@ -153,48 +152,16 @@ with tab1:
             location_code = locations_map[selected_location_name]
             language_code = languages_map[selected_language_name]
 
-            # --- FULLY IMPLEMENTED LOGIC ---
-            
-            # --- Handle Bulk APIs First ---
-            if fetch_kd:
-                log_area.info("Checking Keyword Difficulty cache...")
-                cache_key = f"kd|{','.join(sorted(keywords))}|{location_code}|{language_code}"
-                if db_manager.check_cache(cache_key, max_age_days=cache_duration_days) is None:
-                    log_area.warning("❌ KD Cache MISS. Calling API...")
-                    response = client.fetch_bulk_keyword_difficulty(keywords, location_code, language_code)
-                    if response and response.get('status_code') == 20000:
-                        db_manager.update_cache(cache_key, response)
-                        log_area.success("✅ Successfully fetched and cached Bulk KD.")
-                    else:
-                        log_area.error(f"❌ Failed to fetch Bulk KD. Response: {response}")
-                else:
-                    log_area.success("✅ Found recent Bulk KD data in cache.")
-            
-            if fetch_intent:
-                log_area.info("Checking Search Intent cache...")
-                cache_key = f"intent|{','.join(sorted(keywords))}|{location_code}|{language_code}"
-                if db_manager.check_cache(cache_key, max_age_days=cache_duration_days) is None:
-                    log_area.warning("❌ Intent Cache MISS. Calling API...")
-                    response = client.fetch_search_intent(keywords, location_code, language_code)
-                    if response and response.get('status_code') == 20000:
-                        db_manager.update_cache(cache_key, response)
-                        log_area.success("✅ Successfully fetched and cached Bulk Intent.")
-                    else:
-                        log_area.error(f"❌ Failed to fetch Bulk Intent. Response: {response}")
-                else:
-                    log_area.success("✅ Found recent Bulk Intent data in cache.")
-
-            # --- Handle Individual Keyword APIs ---
             for i, kw in enumerate(keywords):
                 progress_text = f"Processing keyword {i+1}/{len(keywords)}: {kw}"
                 progress_bar.progress((i + 1) / len(keywords), text=progress_text)
                 
-                # Fetch SERP Data
+                # --- Fetch SERP Data (Async) ---
                 if fetch_serp:
                     cache_key = f"serp|{kw}|{location_code}|{language_code}|{selected_device}"
                     if db_manager.check_cache(cache_key, max_age_days=cache_duration_days) is None:
                         log_area.warning(f"❌ SERP Cache MISS for: '{kw}'. Posting task...")
-                        post_response = client.post_serp_tasks([kw], selected_location_name, selected_language_name, selected_device)
+                        post_response = client.post_serp_tasks(kw, location_code, language_code, selected_device)
                         if post_response and post_response.get('tasks'):
                             task_id = post_response['tasks'][0]['id']
                             log_area.info(f"   - Task posted. ID: {task_id}. Polling...")
@@ -212,13 +179,13 @@ with tab1:
                             log_area.error(f"   - ❌ Failed to post SERP task for '{kw}'.")
                     else:
                         log_area.info(f"✅ SERP Cache HIT for: '{kw}'")
-                
-                # Fetch Volume Data
+
+                # --- Fetch Volume Data (Async) ---
                 if fetch_volume:
                     cache_key = f"volume|{kw}|{location_code}|{language_code}"
                     if db_manager.check_cache(cache_key, max_age_days=cache_duration_days) is None:
                         log_area.warning(f"❌ Volume Cache MISS for: '{kw}'. Posting task...")
-                        post_response = client.post_search_volume_tasks([kw], selected_location_name, selected_language_name)
+                        post_response = client.post_search_volume_tasks(kw, location_code, language_code)
                         if post_response and post_response.get('tasks'):
                             task_id = post_response['tasks'][0]['id']
                             log_area.info(f"   - Task posted. ID: {task_id}. Polling...")
@@ -237,6 +204,33 @@ with tab1:
                     else:
                         log_area.info(f"✅ Volume Cache HIT for: '{kw}'")
 
+                # --- Fetch Keyword Difficulty (Live) ---
+                if fetch_kd:
+                    cache_key = f"kd|{kw}|{location_code}|{language_code}"
+                    if db_manager.check_cache(cache_key, max_age_days=cache_duration_days) is None:
+                        log_area.warning(f"❌ KD Cache MISS for: '{kw}'. Calling API...")
+                        response = client.fetch_keyword_difficulty(kw, location_code, language_code)
+                        if response and response.get('status_code') == 20000:
+                            db_manager.update_cache(cache_key, response)
+                            log_area.success(f"✅ Fetched and cached KD for '{kw}'.")
+                        else:
+                            log_area.error(f"❌ Failed to fetch KD for '{kw}'. Response: {response}")
+                    else:
+                        log_area.info(f"✅ KD Cache HIT for: '{kw}'")
+
+                # --- Fetch Search Intent (Live) ---
+                if fetch_intent:
+                    cache_key = f"intent|{kw}|{location_code}|{language_code}"
+                    if db_manager.check_cache(cache_key, max_age_days=cache_duration_days) is None:
+                        log_area.warning(f"❌ Intent Cache MISS for: '{kw}'. Calling API...")
+                        response = client.fetch_search_intent(kw, location_code, language_code)
+                        if response and response.get('status_code') == 20000:
+                            db_manager.update_cache(cache_key, response)
+                            log_area.success(f"✅ Fetched and cached Intent for '{kw}'.")
+                        else:
+                             log_area.error(f"❌ Failed to fetch Intent for '{kw}'. Response: {response}")
+                    else:
+                        log_area.info(f"✅ Intent Cache HIT for: '{kw}'")
             st.success("All tasks complete!")
 
 # == TAB 2: LOCAL CLUSTERING (PLACEHOLDER) ==
@@ -264,16 +258,135 @@ with tab3:
         if not keywords_to_cluster:
             st.warning("Please provide keywords to cluster.")
         else:
-            # Complete logic for fetching data from cache and preparing for clustering
-            # ... (No changes needed in this part) ...
-            st.info("Clustering logic would run here after data verification.")
+            keyword_data_map = {}
+            missing_keywords = []
+            
+            st.write("Verifying data in local cache...")
+            with st.spinner("Checking cache for all required data..."):
+                location_code = locations_map["United States"]
+                language_code = languages_map["English"]
+                device = "desktop"
+                
+                for kw in keywords_to_cluster:
+                    keyword_data_map[kw] = {}
+                    
+                    # 1. Fetch SERP data
+                    serp_key = f"serp|{kw}|{location_code}|{language_code}|{device}"
+                    serp_data = db_manager.check_cache(serp_key)
+                    if serp_data and serp_data.get('tasks') and serp_data['tasks'][0].get('result'):
+                        serp_items = serp_data['tasks'][0]['result'][0].get('items', [])
+                        keyword_data_map[kw]['urls'] = [item['url'] for item in serp_items if 'url' in item]
+                    else:
+                        missing_keywords.append(f"{kw} (SERP)")
+                        continue
+                    
+                    # 2. Fetch Volume data
+                    vol_key = f"volume|{kw}|{location_code}|{language_code}"
+                    vol_data = db_manager.check_cache(vol_key)
+                    if vol_data and vol_data.get('tasks') and vol_data['tasks'][0].get('result'):
+                        if vol_data['tasks'][0]['result']:
+                            result = vol_data['tasks'][0]['result'][0]
+                            keyword_data_map[kw]['volume'] = result.get('search_volume', 'N/A')
+                            keyword_data_map[kw]['cpc'] = result.get('cpc', 'N/A')
+                    
+                    # 3. Fetch KD data
+                    kd_key = f"kd|{kw}|{location_code}|{language_code}"
+                    kd_data = db_manager.check_cache(kd_key)
+                    if kd_data and kd_data.get('tasks') and kd_data['tasks'][0].get('result'):
+                        result_items = kd_data['tasks'][0]['result'][0].get('items', [])
+                        if result_items:
+                            keyword_data_map[kw]['kd'] = result_items[0].get('keyword_difficulty', 'N/A')
+                    
+                    # 4. Fetch Intent data
+                    intent_key = f"intent|{kw}|{location_code}|{language_code}"
+                    intent_data = db_manager.check_cache(intent_key)
+                    if intent_data and intent_data.get('tasks') and intent_data['tasks'][0].get('result'):
+                        result_items = intent_data['tasks'][0]['result'][0].get('items', [])
+                        if result_items:
+                            intent_values = result_items[0].get('intent_info', {}).get('values', [])
+                            primary_intent = max(intent_values, key=lambda x: x['value'], default={})
+                            keyword_data_map[kw]['intent'] = primary_intent.get('intent', 'N/A')
+
+            if missing_keywords:
+                st.error("Data not found in cache for the following. Please fetch them in the 'Data Fetcher' tab first:")
+                st.json(list(set(missing_keywords)))
+            else:
+                st.success("All keywords have cached data. Running clustering...")
+                keyword_serp_data_for_clustering = {kw: data['urls'] for kw, data in keyword_data_map.items() if 'urls' in data}
+                
+                clusters = perform_serp_clustering(keyword_serp_data_for_clustering, min_intersections, urls_to_check)
+                st.info(f"Generated {len(clusters)} clusters.")
+                
+                output_data = []
+                if clusters:
+                    for cluster in clusters:
+                        if not cluster: continue
+                        main_keyword = max(cluster, key=lambda k: keyword_data_map.get(k, {}).get('volume', 0) or 0)
+                        
+                        for keyword in cluster:
+                            data = keyword_data_map.get(keyword, {})
+                            output_data.append({
+                                "Cluster Main Keyword": main_keyword,
+                                "Keyword": keyword,
+                                "Volume": data.get('volume', 'N/A'),
+                                "CPC": data.get('cpc', 'N/A'),
+                                "KD": data.get('kd', 'N/A'),
+                                "Search Intent": data.get('intent', 'N/A')
+                            })
+                
+                if output_data:
+                    df_detailed = pd.DataFrame(output_data)
+                    st.session_state.clustered_data = df_detailed
+                    st.dataframe(df_detailed, use_container_width=True)
+                    st.success("Clustering complete! View/Export in the 'Data Analysis' tab.")
+                else:
+                    st.warning("Could not form any clusters based on the current settings.")
 
 # == TAB 4: DATA ANALYSIS ==
 with tab4:
-    # This logic remains the same
     st.header("Analyze and Export Clusters")
-    st.info("Run clustering in the 'SERP Clustering' tab to see results here.")
+    if st.session_state.clustered_data is None:
+        st.info("Run clustering in the 'SERP Clustering' tab to see results here.")
+    else:
+        df_detailed = st.session_state.clustered_data
+        
+        st.subheader("Detailed Cluster Data")
+        filtered_df = st.data_editor(df_detailed, use_container_width=True, num_rows="dynamic")
+        
+        st.subheader("Cluster Summary")
+        if not filtered_df.empty:
+            numeric_cols = ['Volume', 'CPC', 'KD']
+            for col in numeric_cols:
+                filtered_df[col] = pd.to_numeric(filtered_df[col], errors='coerce')
+            
+            # --- AGGREGATION LOGIC ---
+            # Group by main keyword to calculate stats
+            summary_agg = {
+                'Keywords_in_Cluster': ('Keyword', lambda x: ', '.join(x)),
+                'Total_Volume': ('Volume', 'sum'),
+                'Average_CPC': ('CPC', 'mean'),
+                'Average_KD': ('KD', 'mean'),
+            }
+            # Special handling for intent - find the most common one (mode)
+            if 'Search Intent' in filtered_df.columns:
+                 summary_agg['Primary_Intent'] = ('Search Intent', lambda x: x.mode()[0] if not x.mode().empty else 'N/A')
 
+            df_summary = filtered_df.groupby('Cluster Main Keyword').agg(**summary_agg).reset_index()
+            
+            df_summary['Total_Volume'] = df_summary['Total_Volume'].astype(int)
+            df_summary['Average_CPC'] = df_summary['Average_CPC'].round(2)
+            df_summary['Average_KD'] = df_summary['Average_KD'].round(1)
+            
+            st.dataframe(df_summary, use_container_width=True)
+            st.session_state.summary_data = df_summary
+
+        if st.session_state.get('summary_data') is not None:
+            st.download_button(
+               label="📥 Export to Excel",
+               data=df_to_excel(filtered_df, st.session_state.summary_data),
+               file_name=f"seo_clusters_{time.strftime('%Y%m%d')}.xlsx",
+               mime="application/vnd.ms-excel"
+            )
 
 # == TAB 5: DEBUG & CACHE ==
 with tab5:
@@ -284,8 +397,8 @@ with tab5:
     **Example Cache Keys:**
     - **SERP:** `serp|keyword|location_code|language_code|device`
     - **Volume:** `volume|keyword|location_code|language_code`
-    - **Bulk KD:** `kd|kw1,kw2,kw3|location_code|language_code`
-    - **Bulk Intent:** `intent|kw1,kw2,kw3|location_code|language_code`
+    - **KD:** `kd|keyword|location_code|language_code`
+    - **Intent:** `intent|keyword|location_code|language_code`
     """)
 
     cache_key_input = st.text_input("Enter exact cache key to inspect:")
