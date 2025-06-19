@@ -297,15 +297,17 @@ with tab3:
                         if result_items:
                             keyword_data_map[kw]['kd'] = result_items[0].get('keyword_difficulty', 'N/A')
                     
-                    # 4. Fetch Intent data
+                    # --- FINAL CORRECTED INTENT PARSING LOGIC ---
                     intent_key = f"intent|{kw}|{location_code}|{language_code}"
                     intent_data = db_manager.check_cache(intent_key)
                     if intent_data and intent_data.get('tasks') and intent_data['tasks'][0].get('result'):
                         result_items = intent_data['tasks'][0]['result'][0].get('items', [])
+                        # Since we request one keyword, the first item in the result list is what we need.
+                        # This works around the sandbox returning incorrect keyword names in its list.
                         if result_items:
-                            intent_values = result_items[0].get('intent_info', {}).get('values', [])
-                            primary_intent = max(intent_values, key=lambda x: x['value'], default={})
-                            keyword_data_map[kw]['intent'] = primary_intent.get('intent', 'N/A')
+                             first_result_item = result_items[0]
+                             if first_result_item.get('keyword_intent'):
+                                 keyword_data_map[kw]['intent'] = first_result_item['keyword_intent'].get('label', 'N/A')
 
             if missing_keywords:
                 st.error("Data not found in cache for the following. Please fetch them in the 'Data Fetcher' tab first:")
@@ -321,6 +323,7 @@ with tab3:
                 if clusters:
                     for cluster in clusters:
                         if not cluster: continue
+                        # Use a fallback of 0 for volume if it's 'N/A' or missing
                         main_keyword = max(cluster, key=lambda k: keyword_data_map.get(k, {}).get('volume', 0) or 0)
                         
                         for keyword in cluster:
