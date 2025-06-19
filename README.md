@@ -64,7 +64,7 @@ Follow these steps to get the application running on your local machine.
 This project is actively being developed. The following features and improvements are planned for future releases. We encourage contributions! Please open an issue to discuss any ideas.
 
 - [x] **Add Intersection Count:** Add a column to the cluster results table showing the number of overlapping URLs between a keyword and its cluster's main keyword.
-- [ ] **Improve Cluster Summary UI:** Rework the "Data Analysis" tab to display the cluster summary as a header row directly above the detailed keywords for each cluster, creating a more intuitive, hierarchical view.
+- [x] **Improve Cluster Summary UI:** Rework the "Data Analysis" tab to display the cluster summary as a header row directly above the detailed keywords for each cluster, creating a more intuitive, hierarchical view.
 - [ ] **Optimize API Calls:** Implement true bulk requests for asynchronous tasks to significantly speed up the data fetching process for large keyword lists.
 - [ ] **Refine Clustering Algorithm:** Fine-tune the "Balanced Strict Algorithm" and explore alternative clustering models for improved accuracy and relevance.
 - [ ] **Implement User Login:** Add a secure login system to manage multiple users or projects.
