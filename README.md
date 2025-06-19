@@ -24,7 +24,7 @@ Follow these steps to get the application running on your local machine.
 
 1.  **Clone the Repository**
     ```bash
-    git clone [https://github.com/FassihFayyaz/SEO-Clustering-Tool.git](https://github.com/FassihFayyaz/SEO-Clustering-Tool.git)
+    git clone https://github.com/FassihFayyaz/SEO-Clustering-Tool.git
     cd SEO-Clustering-Tool
     ```
 
