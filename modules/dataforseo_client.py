@@ -73,11 +73,58 @@ class DataForSeoClient:
         }]
         return self._post_request(url, post_data)
 
+    def post_bulk_serp_tasks(self, keywords, location_code, language_code, device):
+        """
+        Posts SERP tasks for multiple keywords in a single bulk request.
+
+        Args:
+            keywords (list): List of keywords to process
+            location_code (int): Location code for the search
+            language_code (str): Language code for the search
+            device (str): Device type ('desktop' or 'mobile')
+
+        Returns:
+            dict: API response containing task IDs for all posted keywords
+        """
+        url = f"{self.api_base_url}/v3/serp/google/organic/task_post"
+        post_data = []
+
+        for keyword in keywords:
+            post_data.append({
+                "location_code": location_code,
+                "language_code": language_code,
+                "keyword": keyword,
+                "device": device,
+                "depth": 100
+            })
+
+        return self._post_request(url, post_data)
+
     def post_search_volume_tasks(self, keyword, location_code, language_code):
         """Posts a search volume task for a single keyword."""
         url = f"{self.api_base_url}/v3/keywords_data/google_ads/search_volume/task_post"
         post_data = [{
             "keywords": [keyword],
+            "location_code": location_code,
+            "language_code": language_code,
+        }]
+        return self._post_request(url, post_data)
+
+    def post_bulk_search_volume_tasks(self, keywords, location_code, language_code):
+        """
+        Posts search volume tasks for multiple keywords in a single bulk request.
+
+        Args:
+            keywords (list): List of keywords to process
+            location_code (int): Location code for the search
+            language_code (str): Language code for the search
+
+        Returns:
+            dict: API response containing task IDs for all posted keywords
+        """
+        url = f"{self.api_base_url}/v3/keywords_data/google_ads/search_volume/task_post"
+        post_data = [{
+            "keywords": keywords,
             "location_code": location_code,
             "language_code": language_code,
         }]

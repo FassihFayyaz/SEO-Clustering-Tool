@@ -65,7 +65,7 @@ This project is actively being developed. The following features and improvement
 
 - [x] **Add Intersection Count:** Add a column to the cluster results table showing the number of overlapping URLs between a keyword and its cluster's main keyword.
 - [x] **Improve Cluster Summary UI:** Rework the "Data Analysis" tab to display the cluster summary as a header row directly above the detailed keywords for each cluster, creating a more intuitive, hierarchical view.
-- [ ] **Optimize API Calls:** Implement true bulk requests for asynchronous tasks to significantly speed up the data fetching process for large keyword lists.
+- [x] **Optimize API Calls:** Implement true bulk requests for asynchronous tasks to significantly speed up the data fetching process for large keyword lists.
 - [ ] **Refine Clustering Algorithm:** Fine-tune the "Balanced Strict Algorithm" and explore alternative clustering models for improved accuracy and relevance.
 - [ ] **Implement User Login:** Add a secure login system to manage multiple users or projects.
 - [ ] **Develop "Local Clustering" (Tab 2):** Implement the placeholder tab to allow users to apply their own local machine-learning models for semantic clustering.
