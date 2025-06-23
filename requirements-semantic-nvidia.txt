@@ -1,9 +1,18 @@
 # Semantic Clustering Dependencies - NVIDIA GPU
-# 
-# This file installs PyTorch with CUDA support for NVIDIA GPUs
+#
+# This file installs semantic clustering dependencies for NVIDIA GPUs
 # Provides 5-10x performance improvement over CPU-only processing
 #
-# Installation:
+# IMPORTANT: Install PyTorch with CUDA FIRST, then this file!
+#
+# Step 1: Check your CUDA version
+# nvidia-smi
+#
+# Step 2: Install PyTorch with CUDA (choose based on your CUDA version)
+# For CUDA 11.8: pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+# For CUDA 12.1: pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+#
+# Step 3: Install this requirements file
 # pip install -r requirements-semantic-nvidia.txt
 #
 # Hardware Requirements:
@@ -28,28 +37,7 @@
 # If you see CUDA Version 12.x, uncomment the CUDA 12.1 section instead
 
 # =============================================================================
-# PyTorch with CUDA 11.8 Support (Default)
-# =============================================================================
-
-# PyTorch with CUDA 11.8 (most common)
---index-url https://download.pytorch.org/whl/cu118
-torch>=2.0.0
-torchvision>=0.15.0
-torchaudio>=2.0.0
-
-# =============================================================================
-# Alternative: PyTorch with CUDA 12.1 Support
-# =============================================================================
-# 
-# If you have CUDA 12.x, comment out the section above and uncomment below:
-#
-# --index-url https://download.pytorch.org/whl/cu121
-# torch>=2.0.0
-# torchvision>=0.15.0
-# torchaudio>=2.0.0
-
-# =============================================================================
-# Core Semantic Clustering Dependencies
+# Semantic Clustering Dependencies (PyTorch with CUDA must be installed first!)
 # =============================================================================
 
 # Main semantic clustering library

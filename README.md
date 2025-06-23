@@ -56,19 +56,23 @@ Follow these steps to get the application running on your local machine.
     pip install -r requirements.txt
 
     # Optional: For Semantic Clustering (AI-powered clustering)
-    # Choose the right file for your hardware:
+    # Two-step installation process:
 
-    # CPU Only (works everywhere, ~500MB download):
+    # Step 1: Install PyTorch for your hardware
+    # CPU Only:
+    pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+
+    # NVIDIA GPU (check CUDA version with nvidia-smi):
+    pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+
+    # AMD GPU (Linux only):
+    pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/rocm5.6
+
+    # Apple Silicon:
+    pip install torch torchvision torchaudio
+
+    # Step 2: Install semantic clustering dependencies
     pip install -r requirements-semantic-cpu.txt
-
-    # NVIDIA GPU (~2-3GB download):
-    pip install -r requirements-semantic-nvidia.txt
-
-    # AMD GPU - Linux only (~1-2GB download):
-    pip install -r requirements-semantic-amd.txt
-
-    # Apple Silicon M1/M2/M3 (~800MB download):
-    pip install -r requirements-semantic-apple.txt
     ```
 
 4.  **Configure API Credentials**

@@ -1,9 +1,14 @@
 # Semantic Clustering Dependencies - Apple Silicon (M1/M2/M3)
-# 
-# This file installs PyTorch with MPS (Metal Performance Shaders) support
+#
+# This file installs semantic clustering dependencies for Apple Silicon
 # Provides 3-5x performance improvement over CPU-only processing on Apple Silicon
 #
-# Installation:
+# IMPORTANT: Install PyTorch with MPS support FIRST, then this file!
+#
+# Step 1: Install PyTorch with MPS support
+# pip install torch torchvision torchaudio
+#
+# Step 2: Install this requirements file
 # pip install -r requirements-semantic-apple.txt
 #
 # Hardware Requirements:
@@ -34,16 +39,7 @@
 # - Older macOS versions will fall back to CPU
 
 # =============================================================================
-# PyTorch with MPS Support
-# =============================================================================
-
-# PyTorch with Metal Performance Shaders (MPS) support
-torch>=2.0.0
-torchvision>=0.15.0
-torchaudio>=2.0.0
-
-# =============================================================================
-# Core Semantic Clustering Dependencies
+# Semantic Clustering Dependencies (PyTorch with MPS must be installed first!)
 # =============================================================================
 
 # Main semantic clustering library

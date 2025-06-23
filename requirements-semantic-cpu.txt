@@ -1,9 +1,14 @@
 # Semantic Clustering Dependencies - CPU Only
-# 
-# This file installs PyTorch with CPU-only support (no NVIDIA/AMD GPU libraries)
-# Perfect for users who want to avoid large GPU dependencies or use CPU processing
 #
-# Installation:
+# This file installs semantic clustering dependencies for CPU-only processing
+# Perfect for users who want to avoid large GPU dependencies
+#
+# IMPORTANT: Install PyTorch CPU version FIRST, then this file!
+#
+# Step 1: Install PyTorch CPU-only version
+# pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+#
+# Step 2: Install this requirements file
 # pip install -r requirements-semantic-cpu.txt
 #
 # Hardware Requirements:
@@ -17,17 +22,7 @@
 # - Compatibility: Universal - works on any system
 
 # =============================================================================
-# PyTorch CPU-Only Installation
-# =============================================================================
-
-# PyTorch with CPU-only support (no CUDA/ROCm)
---index-url https://download.pytorch.org/whl/cpu
-torch>=2.0.0
-torchvision>=0.15.0
-torchaudio>=2.0.0
-
-# =============================================================================
-# Core Semantic Clustering Dependencies
+# Semantic Clustering Dependencies (PyTorch must be installed first!)
 # =============================================================================
 
 # Main semantic clustering library

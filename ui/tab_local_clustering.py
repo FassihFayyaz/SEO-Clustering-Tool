@@ -15,16 +15,28 @@ def render():
     if not engine.check_dependencies():
         st.error("❌ **Required dependencies not installed**")
         st.markdown("""
-        To use semantic clustering, choose the right requirements file for your hardware:
+        To use semantic clustering, follow this two-step installation process:
 
-        **Hardware-Specific Installation (Recommended):**
+        **Step 1: Install PyTorch for your hardware**
+        ```bash
+        # CPU Only (works everywhere, ~200MB)
+        pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
 
-        | Hardware | Command | Download Size | Performance |
-        |----------|---------|---------------|-------------|
-        | **CPU Only** | `pip install -r requirements-semantic-cpu.txt` | ~500MB | Baseline |
-        | **NVIDIA GPU** | `pip install -r requirements-semantic-nvidia.txt` | ~2-3GB | 5-10x faster |
-        | **AMD GPU** | `pip install -r requirements-semantic-amd.txt` | ~1-2GB | 3-7x faster |
-        | **Apple Silicon** | `pip install -r requirements-semantic-apple.txt` | ~800MB | 3-5x faster |
+        # NVIDIA GPU (check CUDA version with: nvidia-smi)
+        pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+
+        # AMD GPU (Linux only)
+        pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/rocm5.6
+
+        # Apple Silicon M1/M2/M3
+        pip install torch torchvision torchaudio
+        ```
+
+        **Step 2: Install semantic clustering dependencies**
+        ```bash
+        # For all hardware types (same file works for all)
+        pip install -r requirements-semantic-cpu.txt
+        ```
 
         **Manual Installation (Advanced):**
         ```bash

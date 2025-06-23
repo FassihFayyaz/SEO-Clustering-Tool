@@ -1,9 +1,14 @@
 # Semantic Clustering Dependencies - AMD GPU (Linux Only)
-# 
-# This file installs PyTorch with ROCm support for AMD GPUs
+#
+# This file installs semantic clustering dependencies for AMD GPUs
 # Provides 3-7x performance improvement over CPU-only processing
 #
-# Installation:
+# IMPORTANT: Install PyTorch with ROCm FIRST, then this file!
+#
+# Step 1: Install PyTorch with ROCm support (Linux only)
+# pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/rocm5.6
+#
+# Step 2: Install this requirements file
 # pip install -r requirements-semantic-amd.txt
 #
 # Hardware Requirements:
@@ -32,17 +37,7 @@
 # - Some older cards with ROCm support
 
 # =============================================================================
-# PyTorch with ROCm Support
-# =============================================================================
-
-# PyTorch with ROCm 5.6 support for AMD GPUs
---index-url https://download.pytorch.org/whl/rocm5.6
-torch>=2.0.0
-torchvision>=0.15.0
-torchaudio>=2.0.0
-
-# =============================================================================
-# Core Semantic Clustering Dependencies
+# Semantic Clustering Dependencies (PyTorch with ROCm must be installed first!)
 # =============================================================================
 
 # Main semantic clustering library
