@@ -1,0 +1,105 @@
+# Semantic Clustering Dependencies - Apple Silicon (M1/M2/M3)
+# 
+# This file installs PyTorch with MPS (Metal Performance Shaders) support
+# Provides 3-5x performance improvement over CPU-only processing on Apple Silicon
+#
+# Installation:
+# pip install -r requirements-semantic-apple.txt
+#
+# Hardware Requirements:
+# - Mac: Apple Silicon (M1, M1 Pro, M1 Max, M1 Ultra, M2, M2 Pro, M2 Max, M2 Ultra, M3, M3 Pro, M3 Max)
+# - macOS: 12.3+ (for MPS support)
+# - Memory: 8GB+ unified memory (16GB+ recommended)
+# - Storage: ~800MB for dependencies + 2-10GB for models
+#
+# Performance:
+# - Speed: 3-5x faster than CPU on Apple Silicon
+# - Models: All models supported with appropriate memory
+# - Compatibility: Apple Silicon Macs with macOS 12.3+
+
+# =============================================================================
+# Apple Silicon Compatibility
+# =============================================================================
+# 
+# Supported Macs:
+# ✅ MacBook Air M1/M2/M3
+# ✅ MacBook Pro M1/M1 Pro/M1 Max/M2/M2 Pro/M2 Max/M3/M3 Pro/M3 Max
+# ✅ iMac M1/M3
+# ✅ Mac mini M1/M2/M2 Pro
+# ✅ Mac Studio M1 Max/M1 Ultra/M2 Max/M2 Ultra
+# ✅ Mac Pro M2 Ultra
+#
+# Requirements:
+# - macOS 12.3+ for MPS acceleration
+# - Older macOS versions will fall back to CPU
+
+# =============================================================================
+# PyTorch with MPS Support
+# =============================================================================
+
+# PyTorch with Metal Performance Shaders (MPS) support
+torch>=2.0.0
+torchvision>=0.15.0
+torchaudio>=2.0.0
+
+# =============================================================================
+# Core Semantic Clustering Dependencies
+# =============================================================================
+
+# Main semantic clustering library
+sentence-transformers>=2.2.0
+
+# Transformer models and tokenizers
+transformers>=4.30.0
+
+# Model acceleration and optimization
+accelerate>=0.20.0
+
+# Safe tensor format for faster model loading
+safetensors>=0.3.0
+
+# =============================================================================
+# Optional Performance Enhancements
+# =============================================================================
+
+# Optimized model inference (uncomment if needed)
+# optimum>=1.12.0
+
+# =============================================================================
+# Installation Notes
+# =============================================================================
+
+# Total Download Size: ~800MB (optimized for Apple Silicon)
+# 
+# Unified Memory Requirements by Model:
+# ✅ gte-large: 8GB+ memory
+# ✅ bge-large-en-v1.5: 8GB+ memory  
+# ✅ sentence-t5-xl: 16GB+ memory
+# ✅ Qwen-0.6B: 12GB+ memory
+# ✅ Qwen-4B: 24GB+ memory
+# ✅ Qwen-8B: 32GB+ memory
+#
+# Performance Tips:
+# - Monitor memory usage with Activity Monitor
+# - Close other memory-intensive applications
+# - Apple Silicon shares memory between CPU and GPU
+# - Use gte-large or bge-large for best compatibility
+# - Larger models benefit more from MPS acceleration
+#
+# Troubleshooting:
+# - If MPS not available: update to macOS 12.3+
+# - If out of memory: use smaller model or close other apps
+# - If slow performance: ensure MPS is being used (check logs)
+# - For Intel Macs: use requirements-semantic-cpu.txt instead
+#
+# Checking MPS Support:
+# Run this in Python to verify MPS is available:
+# import torch
+# print(f"MPS available: {torch.backends.mps.is_available()}")
+# print(f"MPS built: {torch.backends.mps.is_built()}")
+#
+# Apple Silicon Advantages:
+# - Unified memory architecture (shared CPU/GPU memory)
+# - Excellent power efficiency
+# - Good performance for most models
+# - Native ARM64 optimization

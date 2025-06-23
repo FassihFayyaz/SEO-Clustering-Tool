@@ -1,0 +1,70 @@
+# Semantic Clustering Dependencies - CPU Only
+# 
+# This file installs PyTorch with CPU-only support (no NVIDIA/AMD GPU libraries)
+# Perfect for users who want to avoid large GPU dependencies or use CPU processing
+#
+# Installation:
+# pip install -r requirements-semantic-cpu.txt
+#
+# Hardware Requirements:
+# - CPU: Any modern processor
+# - RAM: 4GB+ (8GB+ recommended for large keyword lists)
+# - Storage: ~500MB for dependencies + 2-10GB for models
+#
+# Performance:
+# - Speed: Baseline performance, works everywhere
+# - Models: All models supported, larger models need more RAM
+# - Compatibility: Universal - works on any system
+
+# =============================================================================
+# PyTorch CPU-Only Installation
+# =============================================================================
+
+# PyTorch with CPU-only support (no CUDA/ROCm)
+--index-url https://download.pytorch.org/whl/cpu
+torch>=2.0.0
+torchvision>=0.15.0
+torchaudio>=2.0.0
+
+# =============================================================================
+# Core Semantic Clustering Dependencies
+# =============================================================================
+
+# Main semantic clustering library
+sentence-transformers>=2.2.0
+
+# Transformer models and tokenizers
+transformers>=4.30.0
+
+# Model acceleration and optimization
+accelerate>=0.20.0
+
+# Safe tensor format for faster model loading
+safetensors>=0.3.0
+
+# =============================================================================
+# Optional Performance Enhancements
+# =============================================================================
+
+# Optimized model inference (uncomment if needed)
+# optimum>=1.12.0
+
+# =============================================================================
+# Installation Notes
+# =============================================================================
+
+# Total Download Size: ~500MB (much smaller than GPU versions)
+# 
+# Supported Models:
+# ✅ gte-large (recommended for CPU)
+# ✅ bge-large-en-v1.5 (recommended for CPU)
+# ✅ sentence-t5-xl (needs 8GB+ RAM)
+# ✅ Qwen-0.6B (needs 6GB+ RAM)
+# ⚠️ Qwen-4B (needs 16GB+ RAM)
+# ❌ Qwen-8B (too large for most CPU setups)
+#
+# Performance Tips:
+# - Use gte-large or bge-large for best CPU performance
+# - Close other applications to free up RAM
+# - Process large keyword lists in smaller batches
+# - Consider upgrading to 16GB+ RAM for better performance

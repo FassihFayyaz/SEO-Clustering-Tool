@@ -1,7 +1,18 @@
 # Optional dependencies for Semantic Clustering feature
 #
-# IMPORTANT: Choose the right PyTorch installation for your hardware BEFORE installing this file!
-# See installation options below, then run: pip install -r requirements-semantic.txt
+# IMPORTANT: Choose the right requirements file for your hardware!
+#
+# Hardware-Specific Installation Files:
+# - requirements-semantic-cpu.txt     (CPU only, works everywhere)
+# - requirements-semantic-nvidia.txt  (NVIDIA GPU with CUDA)
+# - requirements-semantic-amd.txt     (AMD GPU with ROCm, Linux only)
+# - requirements-semantic-apple.txt   (Apple Silicon M1/M2/M3)
+#
+# Usage:
+# pip install -r requirements-semantic-[your-hardware].txt
+#
+# This file is kept for backward compatibility but we recommend using
+# the hardware-specific files above for better installation experience.
 
 # =============================================================================
 # STEP 1: Choose Your Hardware Configuration
@@ -57,4 +68,4 @@ safetensors>=0.3.0
 # - AMD GPU: 3-7x faster than CPU (Linux only)
 # - Apple Silicon: 3-5x faster than CPU
 
-# Note: Total download size is 2-5GB for models and dependencies
+# Note: Total download size varies by hardware (200MB-3GB)

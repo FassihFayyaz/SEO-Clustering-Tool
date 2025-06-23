@@ -1,0 +1,95 @@
+# Semantic Clustering Dependencies - AMD GPU (Linux Only)
+# 
+# This file installs PyTorch with ROCm support for AMD GPUs
+# Provides 3-7x performance improvement over CPU-only processing
+#
+# Installation:
+# pip install -r requirements-semantic-amd.txt
+#
+# Hardware Requirements:
+# - GPU: AMD GPU with ROCm support (RX 6000/7000 series, MI series)
+# - OS: Linux only (ROCm not supported on Windows)
+# - VRAM: 4GB+ (6GB+ recommended)
+# - RAM: 4GB+ system RAM
+# - Storage: ~1-2GB for dependencies + 2-10GB for models
+#
+# Performance:
+# - Speed: 3-7x faster than CPU
+# - Models: All models supported with appropriate VRAM
+# - Compatibility: AMD GPUs with ROCm support on Linux
+
+# =============================================================================
+# Important: Linux Only!
+# =============================================================================
+# 
+# ROCm (AMD's GPU computing platform) is only supported on Linux
+# If you're on Windows, please use requirements-semantic-cpu.txt instead
+#
+# Supported AMD GPUs:
+# - RX 6000 series (RX 6600, 6700, 6800, 6900)
+# - RX 7000 series (RX 7600, 7700, 7800, 7900)
+# - MI series (MI100, MI200, MI300)
+# - Some older cards with ROCm support
+
+# =============================================================================
+# PyTorch with ROCm Support
+# =============================================================================
+
+# PyTorch with ROCm 5.6 support for AMD GPUs
+--index-url https://download.pytorch.org/whl/rocm5.6
+torch>=2.0.0
+torchvision>=0.15.0
+torchaudio>=2.0.0
+
+# =============================================================================
+# Core Semantic Clustering Dependencies
+# =============================================================================
+
+# Main semantic clustering library
+sentence-transformers>=2.2.0
+
+# Transformer models and tokenizers
+transformers>=4.30.0
+
+# Model acceleration and optimization
+accelerate>=0.20.0
+
+# Safe tensor format for faster model loading
+safetensors>=0.3.0
+
+# =============================================================================
+# Optional Performance Enhancements
+# =============================================================================
+
+# Optimized model inference (uncomment if needed)
+# optimum>=1.12.0
+
+# =============================================================================
+# Installation Notes
+# =============================================================================
+
+# Total Download Size: ~1-2GB (includes ROCm libraries)
+# 
+# VRAM Requirements by Model:
+# ✅ gte-large: 4GB+ VRAM
+# ✅ bge-large-en-v1.5: 4GB+ VRAM  
+# ✅ sentence-t5-xl: 8GB+ VRAM
+# ✅ Qwen-0.6B: 6GB+ VRAM
+# ✅ Qwen-4B: 12GB+ VRAM
+# ✅ Qwen-8B: 24GB+ VRAM
+#
+# Performance Tips:
+# - Monitor GPU memory with: rocm-smi
+# - AMD GPUs generally need more VRAM than NVIDIA for same models
+# - Use gte-large or bge-large for best compatibility
+# - Consider CPU fallback if VRAM is insufficient
+#
+# Troubleshooting:
+# - If ROCm not detected: check AMD GPU drivers and ROCm installation
+# - If out of memory: use smaller model or CPU version
+# - If installation fails: ensure you're on Linux with supported AMD GPU
+# - For Windows users: use requirements-semantic-cpu.txt instead
+#
+# ROCm Installation (if needed):
+# Follow AMD's official ROCm installation guide for your Linux distribution
+# https://rocm.docs.amd.com/en/latest/deploy/linux/index.html

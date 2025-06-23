@@ -73,31 +73,48 @@ Semantic clustering is an alternative to SERP clustering that groups keywords ba
 
 The semantic clustering feature requires additional packages. **Important**: Install PyTorch for your hardware first!
 
-#### **Step 1: Install PyTorch for Your Hardware**
+#### **Hardware-Specific Installation (Recommended)**
 
-Choose the appropriate PyTorch installation for your system:
+We provide dedicated requirements files for each hardware type. Choose the one that matches your system:
 
 ```bash
-# CPU Only (works on all systems, slower performance)
-pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+# CPU Only (works everywhere, ~500MB download)
+pip install -r requirements-semantic-cpu.txt
 
-# NVIDIA GPU with CUDA 11.8
-pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+# NVIDIA GPU with CUDA (~2-3GB download)
+pip install -r requirements-semantic-nvidia.txt
 
-# NVIDIA GPU with CUDA 12.1
-pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+# AMD GPU with ROCm - Linux only (~1-2GB download)
+pip install -r requirements-semantic-amd.txt
 
-# AMD GPU with ROCm (Linux only)
-pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/rocm5.6
-
-# Apple Silicon (M1/M2/M3 Macs)
-pip install torch torchvision torchaudio
+# Apple Silicon M1/M2/M3 (~800MB download)
+pip install -r requirements-semantic-apple.txt
 ```
 
-#### **Step 2: Install Semantic Clustering Dependencies**
+#### **Manual Installation (Advanced Users)**
+
+If you prefer to install PyTorch separately:
 
 ```bash
-# Install remaining dependencies
+# Step 1: Install PyTorch for your hardware
+# (Choose one based on your system)
+
+# CPU Only
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+
+# NVIDIA GPU (CUDA 11.8)
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+
+# NVIDIA GPU (CUDA 12.1)
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+
+# AMD GPU (Linux only)
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/rocm5.6
+
+# Apple Silicon
+pip install torch torchvision torchaudio
+
+# Step 2: Install semantic clustering dependencies
 pip install -r requirements-semantic.txt
 ```
 

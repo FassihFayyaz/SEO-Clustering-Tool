@@ -1,0 +1,97 @@
+# Semantic Clustering Dependencies - NVIDIA GPU
+# 
+# This file installs PyTorch with CUDA support for NVIDIA GPUs
+# Provides 5-10x performance improvement over CPU-only processing
+#
+# Installation:
+# pip install -r requirements-semantic-nvidia.txt
+#
+# Hardware Requirements:
+# - GPU: NVIDIA GPU with 2GB+ VRAM (4GB+ recommended)
+# - CUDA: Version 11.8 or 12.1 (check with: nvidia-smi)
+# - RAM: 4GB+ system RAM
+# - Storage: ~2-3GB for dependencies + 2-10GB for models
+#
+# Performance:
+# - Speed: 5-10x faster than CPU
+# - Models: All models supported with appropriate VRAM
+# - Compatibility: NVIDIA GPUs with CUDA support
+
+# =============================================================================
+# Check Your CUDA Version First!
+# =============================================================================
+# 
+# Run this command to check your CUDA version:
+# nvidia-smi
+#
+# If you see CUDA Version 11.x, use CUDA 11.8 packages (default below)
+# If you see CUDA Version 12.x, uncomment the CUDA 12.1 section instead
+
+# =============================================================================
+# PyTorch with CUDA 11.8 Support (Default)
+# =============================================================================
+
+# PyTorch with CUDA 11.8 (most common)
+--index-url https://download.pytorch.org/whl/cu118
+torch>=2.0.0
+torchvision>=0.15.0
+torchaudio>=2.0.0
+
+# =============================================================================
+# Alternative: PyTorch with CUDA 12.1 Support
+# =============================================================================
+# 
+# If you have CUDA 12.x, comment out the section above and uncomment below:
+#
+# --index-url https://download.pytorch.org/whl/cu121
+# torch>=2.0.0
+# torchvision>=0.15.0
+# torchaudio>=2.0.0
+
+# =============================================================================
+# Core Semantic Clustering Dependencies
+# =============================================================================
+
+# Main semantic clustering library
+sentence-transformers>=2.2.0
+
+# Transformer models and tokenizers
+transformers>=4.30.0
+
+# Model acceleration and optimization (GPU optimized)
+accelerate>=0.20.0
+
+# Safe tensor format for faster model loading
+safetensors>=0.3.0
+
+# =============================================================================
+# Optional Performance Enhancements
+# =============================================================================
+
+# Optimized model inference for NVIDIA GPUs (uncomment if needed)
+# optimum>=1.12.0
+
+# =============================================================================
+# Installation Notes
+# =============================================================================
+
+# Total Download Size: ~2-3GB (includes CUDA libraries)
+# 
+# VRAM Requirements by Model:
+# ✅ gte-large: 2GB+ VRAM
+# ✅ bge-large-en-v1.5: 2GB+ VRAM  
+# ✅ sentence-t5-xl: 5GB+ VRAM
+# ✅ Qwen-0.6B: 4GB+ VRAM
+# ✅ Qwen-4B: 10GB+ VRAM
+# ✅ Qwen-8B: 20GB+ VRAM
+#
+# Performance Tips:
+# - Monitor GPU memory with: nvidia-smi
+# - Use larger models for better clustering quality
+# - Close other GPU applications before clustering
+# - Consider mixed precision for memory savings
+#
+# Troubleshooting:
+# - If CUDA out of memory: use smaller model or reduce batch size
+# - If CUDA not detected: check NVIDIA drivers and CUDA installation
+# - If wrong CUDA version: use the appropriate --index-url above

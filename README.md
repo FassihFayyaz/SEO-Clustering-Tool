@@ -56,22 +56,19 @@ Follow these steps to get the application running on your local machine.
     pip install -r requirements.txt
 
     # Optional: For Semantic Clustering (AI-powered clustering)
-    # First install PyTorch for your hardware:
+    # Choose the right file for your hardware:
 
-    # CPU Only:
-    pip install torch --index-url https://download.pytorch.org/whl/cpu
+    # CPU Only (works everywhere, ~500MB download):
+    pip install -r requirements-semantic-cpu.txt
 
-    # NVIDIA GPU (CUDA 11.8):
-    pip install torch --index-url https://download.pytorch.org/whl/cu118
+    # NVIDIA GPU (~2-3GB download):
+    pip install -r requirements-semantic-nvidia.txt
 
-    # NVIDIA GPU (CUDA 12.1):
-    pip install torch --index-url https://download.pytorch.org/whl/cu121
+    # AMD GPU - Linux only (~1-2GB download):
+    pip install -r requirements-semantic-amd.txt
 
-    # AMD GPU (Linux only):
-    pip install torch --index-url https://download.pytorch.org/whl/rocm5.6
-
-    # Then install semantic clustering dependencies:
-    pip install -r requirements-semantic.txt
+    # Apple Silicon M1/M2/M3 (~800MB download):
+    pip install -r requirements-semantic-apple.txt
     ```
 
 4.  **Configure API Credentials**
