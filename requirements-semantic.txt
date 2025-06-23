@@ -1,0 +1,18 @@
+# Optional dependencies for Semantic Clustering feature
+# Install with: pip install -r requirements-semantic.txt
+
+# Core semantic clustering dependencies
+sentence-transformers>=2.2.0
+torch>=2.0.0
+transformers>=4.30.0
+
+# Additional dependencies for better performance
+accelerate>=0.20.0
+safetensors>=0.3.0
+
+# For CUDA support (optional, install manually if needed)
+# torch[cuda] - for CUDA 11.8
+# torch[cuda121] - for CUDA 12.1
+
+# Note: These packages are large (2-5GB total) and optional
+# The main application works without them, but semantic clustering requires them

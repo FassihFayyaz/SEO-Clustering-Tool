@@ -67,14 +67,14 @@ if not client or not client.login or not client.password:
     
 # --- Main Application UI (Tabs) ---
 tab1, tab2, tab3, tab4, tab5 = st.tabs(
-    ["📊 Data Fetcher", "🧠 Local Clustering (Placeholder)", "🔗 SERP Clustering", "📈 Data Analysis", "🐞 Debug & Cache"]
+    ["📊 Data Fetcher", "🧠 Semantic Clustering", "🔗 SERP Clustering", "📈 Data Analysis", "🐞 Debug & Cache"]
 )
 
 # == TAB 1: DATA FETCHER ==
 with tab1:
     tab_data_fetcher.render(client, db_manager, locations, languages, locations_map, languages_map)
 
-# == TAB 2: LOCAL CLUSTERING (PLACEHOLDER) ==
+# == TAB 2: SEMANTIC CLUSTERING ==
 with tab2:
     tab_local_clustering.render()
 

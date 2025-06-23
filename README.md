@@ -7,8 +7,19 @@ A cost-effective desktop application built with Python and Streamlit for advance
 - **Cost-Effective Data Fetching:** Fetches SERP results, Search Volume, CPC, Keyword Difficulty, and Search Intent from the DataForSEO API.
 - **Intelligent Local Caching:** A built-in SQLite database caches all API responses. The tool checks the cache before every API call, preventing redundant requests and saving significant costs.
 - **Advanced SERP Clustering:** Three clustering algorithms (Default, Strict, Balanced Strict) with two cluster strategies (Search Volume vs CPC) for optimal keyword grouping based on overlapping SERP URLs.
+- **Semantic Clustering:** AI-powered clustering using embedding models for unlimited, cost-free keyword clustering based on semantic similarity.
 - **Cache Control:** User-configurable cache duration lets you decide when to fetch fresh data vs. use existing local data.
 - **Data Analysis & Export:** An interactive workbench to analyze, filter, and summarize cluster data. Final reports can be exported to a multi-sheet Excel file.
+
+### 🧠 Semantic vs SERP Clustering
+
+| Feature | Semantic Clustering | SERP Clustering |
+|---------|-------------------|-----------------|
+| **Cost** | ✅ Free (no API costs) | 💰 API costs ($0.50+ per keyword) |
+| **Speed** | ⚡ Fast (local processing) | 🐌 Slow (API calls + polling) |
+| **Keyword Limit** | ✅ Unlimited | ⚠️ Limited by API costs |
+| **Accuracy** | 🎯 Semantic similarity | 🎯 SERP overlap |
+| **Best For** | Large lists, semantic grouping | Precise SERP targeting |
 
 ## 🛠️ Technology Stack
 
@@ -41,7 +52,11 @@ Follow these steps to get the application running on your local machine.
 
 3.  **Install Dependencies**
     ```bash
+    # Core dependencies
     pip install -r requirements.txt
+
+    # Optional: For Semantic Clustering (AI-powered clustering)
+    pip install -r requirements-semantic.txt
     ```
 
 4.  **Configure API Credentials**
@@ -67,8 +82,9 @@ This project is actively being developed. The following features and improvement
 - [x] **Improve Cluster Summary UI:** Rework the "Data Analysis" tab to display the cluster summary as a header row directly above the detailed keywords for each cluster, creating a more intuitive, hierarchical view.
 - [x] **Optimize API Calls:** Implement true bulk requests for asynchronous tasks to significantly speed up the data fetching process for large keyword lists.
 - [x] **Enhanced Clustering Algorithms:** Implement three clustering algorithms (Default, Strict, Balanced Strict) with two cluster strategies (Volume vs CPC) for optimal keyword grouping.
+- [x] **Semantic Clustering:** Implement AI-powered semantic clustering using embedding models for unlimited, cost-free keyword clustering.
 - [ ] **Implement User Login:** Add a secure login system to manage multiple users or projects.
-- [ ] **Develop "Local Clustering" (Tab 2):** Implement the placeholder tab to allow users to apply their own local machine-learning models for semantic clustering.
+- [ ] **Advanced Semantic Models:** Add support for custom fine-tuned models and domain-specific embeddings.
 
 ##🤝 Contributing
 

@@ -9,6 +9,7 @@ This file tracks the planned features and improvements for the SEO Keyword Clust
 ### Medium Priority
 - [x] **Optimize API Calls with Bulk Requests:** Refactor the data fetcher to use true bulk `task_post` calls for SERP and Volume APIs to increase speed.
 - [x] **Refine Clustering Algorithm:** Implement three clustering algorithms (Default, Strict, Balanced Strict) with different cluster strategies (Volume vs CPC).
+- [x] **Implement Semantic Clustering:** Add AI-powered semantic clustering using embedding models for unlimited, cost-free keyword clustering.
 
 ### Low Priority / Future Features
 - [ ] **Implement User Login:** Add a secure authentication system.
