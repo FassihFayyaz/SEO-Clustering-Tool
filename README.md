@@ -6,7 +6,7 @@ A cost-effective desktop application built with Python and Streamlit for advance
 
 - **Cost-Effective Data Fetching:** Fetches SERP results, Search Volume, CPC, Keyword Difficulty, and Search Intent from the DataForSEO API.
 - **Intelligent Local Caching:** A built-in SQLite database caches all API responses. The tool checks the cache before every API call, preventing redundant requests and saving significant costs.
-- **Advanced SERP Clustering:** Automatically groups keywords into relevant topical clusters based on the number of overlapping URLs in their search results using a "Balanced Strict Algorithm".
+- **Advanced SERP Clustering:** Three clustering algorithms (Default, Strict, Balanced Strict) with two cluster strategies (Search Volume vs CPC) for optimal keyword grouping based on overlapping SERP URLs.
 - **Cache Control:** User-configurable cache duration lets you decide when to fetch fresh data vs. use existing local data.
 - **Data Analysis & Export:** An interactive workbench to analyze, filter, and summarize cluster data. Final reports can be exported to a multi-sheet Excel file.
 
@@ -66,7 +66,7 @@ This project is actively being developed. The following features and improvement
 - [x] **Add Intersection Count:** Add a column to the cluster results table showing the number of overlapping URLs between a keyword and its cluster's main keyword.
 - [x] **Improve Cluster Summary UI:** Rework the "Data Analysis" tab to display the cluster summary as a header row directly above the detailed keywords for each cluster, creating a more intuitive, hierarchical view.
 - [x] **Optimize API Calls:** Implement true bulk requests for asynchronous tasks to significantly speed up the data fetching process for large keyword lists.
-- [ ] **Refine Clustering Algorithm:** Fine-tune the "Balanced Strict Algorithm" and explore alternative clustering models for improved accuracy and relevance.
+- [x] **Enhanced Clustering Algorithms:** Implement three clustering algorithms (Default, Strict, Balanced Strict) with two cluster strategies (Volume vs CPC) for optimal keyword grouping.
 - [ ] **Implement User Login:** Add a secure login system to manage multiple users or projects.
 - [ ] **Develop "Local Clustering" (Tab 2):** Implement the placeholder tab to allow users to apply their own local machine-learning models for semantic clustering.
 
