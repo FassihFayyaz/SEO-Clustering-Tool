@@ -15,10 +15,28 @@ def render():
     if not engine.check_dependencies():
         st.error("❌ **Required dependencies not installed**")
         st.markdown("""
-        To use semantic clustering, please install the required packages:
+        To use semantic clustering, please install PyTorch for your hardware first, then the other dependencies:
+
+        **Step 1: Install PyTorch for your hardware**
         ```bash
-        pip install sentence-transformers torch
+        # CPU Only (works everywhere, slower)
+        pip install torch --index-url https://download.pytorch.org/whl/cpu
+
+        # NVIDIA GPU (CUDA 11.8)
+        pip install torch --index-url https://download.pytorch.org/whl/cu118
+
+        # NVIDIA GPU (CUDA 12.1)
+        pip install torch --index-url https://download.pytorch.org/whl/cu121
+
+        # AMD GPU (Linux only)
+        pip install torch --index-url https://download.pytorch.org/whl/rocm5.6
         ```
+
+        **Step 2: Install semantic clustering dependencies**
+        ```bash
+        pip install -r requirements-semantic.txt
+        ```
+
         After installation, restart the application.
         """)
         return
@@ -242,23 +260,33 @@ def render():
         """)
 
     # Hardware requirements info
-    with st.expander("💻 Hardware Requirements"):
+    with st.expander("💻 Hardware Requirements & Performance"):
         st.markdown("""
         **Minimum Requirements:**
         - **CPU**: Any modern processor
         - **RAM**: 4GB+ (8GB+ recommended for large keyword lists)
         - **Storage**: 2-10GB for model files (downloaded once)
 
-        **GPU Requirements (Optional but Recommended):**
-        - **gte-large/bge-large**: 2GB+ VRAM
-        - **sentence-t5-xl**: 5GB+ VRAM
-        - **Qwen-0.6B**: 4GB+ VRAM
-        - **Qwen-4B**: 10GB+ VRAM
-        - **Qwen-8B**: 20GB+ VRAM
+        **GPU Support & VRAM Requirements:**
 
-        **Performance Tips:**
-        - GPU acceleration provides 5-10x speed improvement
-        - Models are downloaded once and cached locally
-        - Larger models generally provide better clustering quality
+        | Model | CPU | NVIDIA GPU | AMD GPU | Apple Silicon |
+        |-------|-----|------------|---------|---------------|
+        | **gte-large/bge-large** | ✅ 4GB RAM | ✅ 2GB+ VRAM | ✅ 4GB+ VRAM | ✅ 8GB+ Memory |
+        | **sentence-t5-xl** | ✅ 8GB RAM | ✅ 5GB+ VRAM | ✅ 8GB+ VRAM | ✅ 16GB+ Memory |
+        | **Qwen-0.6B** | ✅ 6GB RAM | ✅ 4GB+ VRAM | ✅ 6GB+ VRAM | ✅ 12GB+ Memory |
+        | **Qwen-4B** | ⚠️ 16GB RAM | ✅ 10GB+ VRAM | ✅ 12GB+ VRAM | ✅ 24GB+ Memory |
+        | **Qwen-8B** | ❌ Too large | ✅ 20GB+ VRAM | ✅ 24GB+ VRAM | ✅ 32GB+ Memory |
+
+        **Performance Comparison:**
+        - **NVIDIA GPU**: 5-10x faster than CPU (CUDA acceleration)
+        - **AMD GPU**: 3-7x faster than CPU (ROCm, Linux only)
+        - **Apple Silicon**: 3-5x faster than CPU (MPS acceleration)
+        - **CPU Only**: Baseline performance, works everywhere
+
+        **Installation Notes:**
+        - **NVIDIA**: Check CUDA version with `nvidia-smi`
+        - **AMD**: ROCm support is Linux-only
+        - **Apple**: M1/M2/M3 chips have automatic MPS acceleration
+        - **CPU**: Universal compatibility, no special drivers needed
         """)
 

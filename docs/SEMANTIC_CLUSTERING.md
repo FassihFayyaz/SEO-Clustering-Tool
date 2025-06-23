@@ -71,15 +71,41 @@ Semantic clustering is an alternative to SERP clustering that groups keywords ba
 
 ### **1. Install Dependencies**
 
-The semantic clustering feature requires additional packages:
+The semantic clustering feature requires additional packages. **Important**: Install PyTorch for your hardware first!
+
+#### **Step 1: Install PyTorch for Your Hardware**
+
+Choose the appropriate PyTorch installation for your system:
 
 ```bash
-# Install semantic clustering dependencies
-pip install -r requirements-semantic.txt
+# CPU Only (works on all systems, slower performance)
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
 
-# Or install manually:
-pip install sentence-transformers torch transformers
+# NVIDIA GPU with CUDA 11.8
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+
+# NVIDIA GPU with CUDA 12.1
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+
+# AMD GPU with ROCm (Linux only)
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/rocm5.6
+
+# Apple Silicon (M1/M2/M3 Macs)
+pip install torch torchvision torchaudio
 ```
+
+#### **Step 2: Install Semantic Clustering Dependencies**
+
+```bash
+# Install remaining dependencies
+pip install -r requirements-semantic.txt
+```
+
+#### **Hardware-Specific Notes:**
+- **NVIDIA Users**: Check your CUDA version with `nvidia-smi`
+- **AMD Users**: ROCm support is Linux-only, use CPU version on Windows
+- **Apple Users**: MPS acceleration works automatically on M1/M2/M3 chips
+- **CPU Users**: Works everywhere but 5-10x slower than GPU
 
 ### **2. Hardware Requirements**
 

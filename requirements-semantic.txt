@@ -1,18 +1,60 @@
 # Optional dependencies for Semantic Clustering feature
-# Install with: pip install -r requirements-semantic.txt
+#
+# IMPORTANT: Choose the right PyTorch installation for your hardware BEFORE installing this file!
+# See installation options below, then run: pip install -r requirements-semantic.txt
+
+# =============================================================================
+# STEP 1: Choose Your Hardware Configuration
+# =============================================================================
+
+# Option A: CPU Only (Works on all systems, slower performance)
+# pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+
+# Option B: NVIDIA GPU with CUDA 11.8
+# pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+
+# Option C: NVIDIA GPU with CUDA 12.1
+# pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+
+# Option D: AMD GPU with ROCm (Linux only)
+# pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/rocm5.6
+
+# Option E: Apple Silicon (M1/M2/M3 Macs) - MPS acceleration
+# pip install torch torchvision torchaudio
+
+# =============================================================================
+# STEP 2: Install These Dependencies
+# =============================================================================
 
 # Core semantic clustering dependencies
 sentence-transformers>=2.2.0
-torch>=2.0.0
 transformers>=4.30.0
 
 # Additional dependencies for better performance
 accelerate>=0.20.0
 safetensors>=0.3.0
 
-# For CUDA support (optional, install manually if needed)
-# torch[cuda] - for CUDA 11.8
-# torch[cuda121] - for CUDA 12.1
+# Optional: For even better performance with large models
+# optimum>=1.12.0
 
-# Note: These packages are large (2-5GB total) and optional
-# The main application works without them, but semantic clustering requires them
+# =============================================================================
+# Installation Instructions
+# =============================================================================
+
+# 1. First, install PyTorch for your hardware (choose one option above)
+# 2. Then install this requirements file: pip install -r requirements-semantic.txt
+# 3. Restart the application to use semantic clustering
+
+# Hardware Requirements:
+# - CPU Only: 4GB+ RAM, any processor
+# - NVIDIA GPU: 2GB+ VRAM (4GB+ recommended)
+# - AMD GPU: 4GB+ VRAM (Linux only)
+# - Apple Silicon: 8GB+ unified memory
+
+# Performance Comparison:
+# - CPU: Baseline performance, works everywhere
+# - NVIDIA GPU: 5-10x faster than CPU
+# - AMD GPU: 3-7x faster than CPU (Linux only)
+# - Apple Silicon: 3-5x faster than CPU
+
+# Note: Total download size is 2-5GB for models and dependencies
