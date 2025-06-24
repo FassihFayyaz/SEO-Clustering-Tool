@@ -99,8 +99,11 @@ This project is actively being developed. The following features and improvement
 - [x] **Optimize API Calls:** Implement true bulk requests for asynchronous tasks to significantly speed up the data fetching process for large keyword lists.
 - [x] **Enhanced Clustering Algorithms:** Implement three clustering algorithms (Default, Strict, Balanced Strict) with two cluster strategies (Volume vs CPC) for optimal keyword grouping.
 - [x] **Semantic Clustering:** Implement AI-powered semantic clustering using embedding models for unlimited, cost-free keyword clustering.
-- [ ] **Implement User Login:** Add a secure login system to manage multiple users or projects.
-- [ ] **Advanced Semantic Models:** Add support for custom fine-tuned models and domain-specific embeddings.
+- [ ] **Improve Data Analysis Tab** Improve the tab to show more detailed information about each cluster, including keyword counts, average CPC, and more with filters and then make another section below the table that will show cluster cards with there main cluster data like the keyword insights does.
+- [ ] **Make the app fast** Currently it feels like it takes too much time to load so make it faster.
+- [ ] **Login System:** Add a secure authentication system to allow multiple users.
+- [ ] **Advestise me:** Add my name almost everywhere in the app (professionally) don't just stuff it in. Include some type of donate button. You can ask me for link of the button when you are doing this. 
+- [ ] Finish the project here with proper documentation, readme, and everything else.
 
 ##🤝 Contributing
 
