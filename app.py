@@ -31,14 +31,26 @@ if 'confirm_delete' not in st.session_state:
 # --- Load Static Data & Initialize Clients ---
 @st.cache_resource
 def load_data_and_clients():
+    # Try to load from static files first, then fallback to dynamic system
     try:
         with open('data/locations.json', 'r') as f:
-            locations = json.load(f)
+            locations_data = json.load(f)
         with open('data/languages.json', 'r') as f:
-            languages = json.load(f)
+            languages_data = json.load(f)
+
+        # Convert to expected format
+        locations = [{"name": loc["name"], "code": loc["code"]} for loc in locations_data]
+        languages = [{"name": lang["name"], "code": lang["code"]} for lang in languages_data]
+
     except FileNotFoundError:
-        st.error("Error: `locations.json` or `languages.json` not found in `data/` directory.")
-        return None
+        # Fallback to dynamic system
+        from utils.dataforseo_locations_languages import get_location_options, get_language_options
+
+        location_options = get_location_options()
+        language_options = get_language_options()
+
+        locations = [{"name": name, "code": code} for name, code in location_options.items()]
+        languages = [{"name": name, "code": code} for name, code in language_options.items()]
 
     locations_map = {loc['name']: loc['code'] for loc in locations}
     languages_map = {lang['name']: lang['code'] for lang in languages}

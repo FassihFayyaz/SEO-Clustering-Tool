@@ -4,11 +4,75 @@ import pandas as pd
 
 from utils import get_keywords_from_input
 from modules.clustering import perform_serp_clustering
+from utils.dataforseo_locations_languages import get_popular_locations, get_popular_languages, get_location_options, get_language_options
 
 def render(db_manager, locations_map, languages_map):
     st.header("Cluster Keywords by SERP Overlap")
     st.info("This module clusters keywords based on shared URLs in their search results. It ONLY uses data from the local cache.")
     
+    # Location and Language Selection
+    st.subheader("🌍 Location & Language Settings")
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        # Get location options
+        popular_locations = get_popular_locations()
+        all_locations = get_location_options()
+
+        location_mode = st.radio(
+            "Location Selection:",
+            ["Popular Locations", "All Locations"],
+            help="Choose from popular locations or search all available locations"
+        )
+
+        if location_mode == "Popular Locations":
+            selected_location_name = st.selectbox(
+                "Select Location:",
+                options=list(popular_locations.keys()),
+                index=0
+            )
+            selected_location_code = popular_locations[selected_location_name]
+        else:
+            selected_location_name = st.selectbox(
+                "Select Location:",
+                options=list(all_locations.keys()),
+                index=list(all_locations.keys()).index("United States") if "United States" in all_locations else 0
+            )
+            selected_location_code = all_locations[selected_location_name]
+
+    with col2:
+        # Get language options
+        popular_languages = get_popular_languages()
+        all_languages = get_language_options()
+
+        language_mode = st.radio(
+            "Language Selection:",
+            ["Popular Languages", "All Languages"],
+            help="Choose from popular languages or search all available languages"
+        )
+
+        if language_mode == "Popular Languages":
+            selected_language_name = st.selectbox(
+                "Select Language:",
+                options=list(popular_languages.keys()),
+                index=0
+            )
+            selected_language_code = popular_languages[selected_language_name]
+        else:
+            selected_language_name = st.selectbox(
+                "Select Language:",
+                options=list(all_languages.keys()),
+                index=list(all_languages.keys()).index("English") if "English" in all_languages else 0
+            )
+            selected_language_code = all_languages[selected_language_name]
+
+    with col3:
+        st.write("**Selected Settings:**")
+        st.write(f"📍 **Location:** {selected_location_name}")
+        st.write(f"🗣️ **Language:** {selected_language_name}")
+        st.write(f"📱 **Device:** Desktop")
+        st.info("💡 Make sure your cached data was fetched with these same settings!")
+
     c1, c2 = st.columns(2)
     with c1:
         st.subheader("Keyword Input")
@@ -67,9 +131,9 @@ def render(db_manager, locations_map, languages_map):
             
             st.write("Verifying data in local cache...")
             with st.spinner("Checking cache for all required data..."):
-                # These are hardcoded in the original. A future improvement could be to make these selectable.
-                location_code = locations_map["United States"]
-                language_code = languages_map["English"]
+                # Use selected location and language
+                location_code = selected_location_code
+                language_code = selected_language_code
                 device = "desktop"
                 
                 for kw in keywords_to_cluster:
